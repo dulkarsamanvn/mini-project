@@ -1,0 +1,519 @@
+{% extends "userbase.html" %}
+{% block content %}
+
+<div class="hero">
+    <img src="https://png.pngtree.com/background/20210710/original/pngtree-black-dynamic-watch-simple-black-banner-picture-image_1032760.jpg"
+        alt="Tissot Watch Hero" style="width: 100%; height: 500px; object-fit: cover;">
+</div>
+
+<main class="products-container">
+    <div class="products-header">
+        <h1>PRODUCTS</h1>
+    </div>
+
+    <div class="products-layout">
+        <!-- Filters Sidebar -->
+        <aside class="filters">
+            <!-- <div class="filter-group">
+                <div class="filter-header" onclick="toggleFilter(this)">
+                    <span class="filter-name">Brand</span>
+                    <span class="toggle-icon">›</span>
+                    <button class="clear-btn">Clear</button>
+                </div>
+                <div class="filter-content">
+                    <label><input type="checkbox"> Tissot</label>
+                    <label><input type="checkbox"> Rado</label>
+                    <label><input type="checkbox"> Seiko</label>
+                </div>
+            </div> -->
+
+            <div class="filter-group">
+                <div class="filter-header" onclick="toggleFilter(this)">
+                    <span class="filter-name">Brands</span>
+                    <span class="toggle-icon">›</span>
+                    <button class="clear-btn" onclick="clearFilter()">Clear</button>
+                </div>
+                <div class="filter-content">
+                    {% for brand in brands %}
+                    <label>
+                        <input type="checkbox" name="brand" value="{{ brand.id }}"> {{ brand.name }}
+                    </label>
+                    {% empty %}
+                    <p>No brands available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-header" onclick="toggleFilter(this)">
+                    <span class="filter-name">Price</span>
+                    <span class="toggle-icon">›</span>
+                    <button class="clear-btn">Clear</button>
+                </div>
+                <div class="filter-content">
+                    <label><input type="checkbox"> Under ₹20,000</label>
+                    <label><input type="checkbox"> ₹20,000 - ₹50,000</label>
+                    <label><input type="checkbox"> Above ₹50,000</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-header" onclick="toggleFilter(this)">
+                    <span class="filter-name">Category</span>
+                    <span class="toggle-icon">›</span>
+                    <button class="clear-btn" onclick="clearFilter()">Clear</button>
+                </div>
+                <div class="filter-content">
+                    {% for category in categories %}
+                    <label>
+                        <input type="checkbox" name="category" value="{{ category.id }}"> {{ category.name }}
+                    </label>
+                    {% empty %}
+                    <p>No categories available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <script>
+                // Function to toggle the visibility of the filter content
+                function toggleFilter(headerElement) {
+                    const filterContent = headerElement.nextElementSibling;
+                    const toggleIcon = headerElement.querySelector('.toggle-icon');
+                    if (filterContent.style.display === 'none' || !filterContent.style.display) {
+                        filterContent.style.display = 'block';
+                        toggleIcon.textContent = '˅'; // Change icon to "expanded" state
+                    } else {
+                        filterContent.style.display = 'none';
+                        toggleIcon.textContent = '›'; // Change icon to "collapsed" state
+                    }
+                }
+
+                // Function to clear all checkboxes
+                function clearFilter() {
+                    const checkboxes = document.querySelectorAll('.filter-content input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => checkbox.checked = false);
+                }
+            </script>
+
+            <!-- <div class="filter-group">
+                <div class="filter-header" onclick="toggleFilter(this)">
+                    <span class="filter-name">Category</span>
+                    <span class="toggle-icon">›</span>
+                    <button class="clear-btn">Clear</button>
+                </div>
+                <div class="filter-content">
+                    <label><input type="checkbox"> Chronograph</label>
+                    <label><input type="checkbox"> Automatic</label>
+                    <label><input type="checkbox"> Digital</label>
+                </div>
+            </div> -->
+
+            <div class="filter-group">
+                <div class="filter-header" onclick="toggleFilter(this)">
+                    <span class="filter-name">Movement</span>
+                    <span class="toggle-icon">›</span>
+                    <button class="clear-btn">Clear</button>
+                </div>
+                <div class="filter-content">
+                    <label><input type="checkbox"> Automatic</label>
+                    <label><input type="checkbox"> Quartz</label>
+                    <label><input type="checkbox"> Manual</label>
+                    <label><input type="checkbox"> Analog</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-header" onclick="toggleFilter(this)">
+                    <span class="filter-name">Strap Color</span>
+                    <span class="toggle-icon">›</span>
+                    <button class="clear-btn">Clear</button>
+                </div>
+                <div class="filter-content">
+                    <label><input type="checkbox"> Silver</label>
+                    <label><input type="checkbox"> Gold</label>
+                    <label><input type="checkbox"> Brown</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-header" onclick="toggleFilter(this)">
+                    <span class="filter-name">Case Material</span>
+                    <span class="toggle-icon">›</span>
+                    <button class="clear-btn">Clear</button>
+                </div>
+                <div class="filter-content">
+                    <label><input type="checkbox"> Stainless Steel</label>
+                    <label><input type="checkbox"> Gold Plated</label>
+                    <label><input type="checkbox"> Titanium</label>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Products Grid -->
+        <div class="products-content">
+            <div class="products-top">
+                <div class="sort-by">
+                    <select>
+                        <option>Sort by: Featured</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                        <option>Newest First</option>
+                    </select>
+                </div>
+            </div>
+            <div class="products-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    <a href="{% url 'product:product_detail' product.id %}">
+                        <img src="{{ product.primary_image_url }}" alt="{{ product.name }}" class="product-image">
+                        <h3>{{ product.name }}</h3>
+                        <p class="price">₹ {{ product.price }}</p>
+                    </a>
+                    <!-- <p>
+                            <strong>Dial Color:</strong> {{ product.dial_color }}
+                        </p> -->
+                    <!-- <div class="case-colors">
+                            <strong>Case Color:</strong>
+                            {% for color in product.other_case_colors %}
+                                <span class="color-circle" style="background-color: {{ color }};"></span>
+                            {% endfor %}
+                        </div> -->
+                    <div class="dial-colors">
+                        <!-- <strong>Dial Colors:</strong> -->
+                        {% for color in product.dial_colors %}
+                        <!-- <p>{{ color }}</p> Debugging output: show raw color values -->
+                        <span class="color-circle" style="background-color: {{ color }};"></span>
+                        {% empty %}
+                        <p>No dial colors available.</p>
+                        {% endfor %}
+                    </div>
+
+
+                </div>
+                {% empty %}
+                <p>No products available.</p>
+                {% endfor %}
+            </div>
+
+
+            <!-- <div class="pagination">
+                <button class="prev-btn">‹</button>
+                <div class="page-numbers">
+                    <span class="active">1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
+                    <span>...</span>
+                    <span>46</span>
+                </div>
+                <button class="next-btn">›</button>
+            </div> -->
+        </div>
+    </div>
+</main>
+
+<style>
+    .products-container {
+        padding: 20px 40px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .products-header {
+        background: #f5f5f5;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .products-layout {
+        display: flex;
+        gap: 30px;
+    }
+
+    .filters {
+        width: 250px;
+        flex-shrink: 0;
+    }
+
+    /* Products Grid */
+    .products-content {
+        flex: 1;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        /* Reduced from 250px to 220px */
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .product-card {
+        border: 1px solid #e0e0e0;
+        padding: 12px;
+        /* Reduced from 15px */
+        text-align: center;
+        border-radius: 4px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .product-card img {
+        width: 100%;
+        height: auto;
+        margin-bottom: 15px;
+    }
+
+    .product-card h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .price {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .case-colors {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .case-colors span:first-child {
+        margin-right: 10px;
+    }
+
+    .dial-colors {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .dial-colors span:first-child {
+        margin-right: 10px;
+    }
+
+    .color-circle {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        margin: 0 5px;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+    }
+
+    .product-image {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+    }
+
+    .color-list {
+        margin-top: 10px;
+    }
+
+    .color-box {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        margin: 0 5px;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+    }
+
+    .color-swatch {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin: 0 5px;
+        border: 1px solid #fff;
+    }
+
+    .filter-group {
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 15px;
+    }
+
+    .filter-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .filter-name {
+        flex-grow: 1;
+        font-weight: 500;
+    }
+
+    .toggle-icon {
+        margin-right: 10px;
+        transition: transform 0.3s ease;
+    }
+
+    .filter-group.active .toggle-icon {
+        transform: rotate(90deg);
+    }
+
+    .clear-btn {
+        background: none;
+        border: none;
+        color: #666;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 0 5px;
+    }
+
+    .clear-btn:hover {
+        text-decoration: underline;
+    }
+
+    .filter-content {
+        display: none;
+        padding: 10px 0;
+    }
+
+    .filter-group.active .filter-content {
+        display: block;
+    }
+
+    .filter-content label {
+        display: block;
+        padding: 5px 0;
+        cursor: pointer;
+    }
+
+    .filter-content input[type="checkbox"] {
+        margin-right: 8px;
+    }
+
+    /* Products Grid */
+    .products-content {
+        flex: 1;
+    }
+
+    .products-top {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+
+    .sort-by select {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        min-width: 200px;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .product-card {
+        border: 1px solid #e0e0e0;
+        padding: 15px;
+        text-align: center;
+        border-radius: 4px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-card img {
+        width: 100%;
+        height: auto;
+        margin-bottom: 15px;
+    }
+
+    .product-card h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .product-image {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+    }
+
+
+    .price {
+        font-weight: bold;
+        color: #000;
+    }
+
+    /* Pagination */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .page-numbers {
+        display: flex;
+        gap: 5px;
+    }
+
+    .page-numbers span {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .page-numbers span.active {
+        background: #000;
+        color: white;
+        border-color: #000;
+    }
+
+    .prev-btn,
+    .next-btn {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+        .products-container {
+            padding: 15px;
+        }
+
+        .products-layout {
+            flex-direction: column;
+        }
+
+        .filters {
+            width: 100%;
+        }
+    }
+</style>
+
+<script>
+    function toggleFilter(header) {
+        const filterGroup = header.parentElement;
+        filterGroup.classList.toggle('active');
+    }
+
+    function clearFilter() {
+        const checkboxes = document.querySelectorAll('.filter-content input[type="checkbox"]');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+    }
+</script>
+
+{% endblock %}

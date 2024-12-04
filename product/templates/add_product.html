@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+<h1>Add Product</h1>
+
+<form method="POST" id="addProductForm">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required placeholder="Enter product name">
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required placeholder="Enter product description"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="category">Category:</label>
+        <select id="category" name="category" required>
+            <option value="" disabled selected>Select a category</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="brand">Brand:</label>
+        <select id="brand" name="brand" required>
+            <option value="" disabled selected>Select a brand</option>
+            {% for brand in brands %}
+            <option value="{{ brand.id }}">{{ brand.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="movement">Movement:</label>
+        <select id="movement" name="movement" required>
+            <option value="" disabled selected>Select movement type</option>
+            <option value="automatic">Automatic</option>
+            <option value="quartz">Quartz</option>
+            <option value="manual">Manual</option>
+            <option value="solar">Solar</option>
+        </select>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn save-btn">Save</button>
+        <a href="{% url 'product:product_list' %}" class="btn back-btn">Back to Products</a>
+    </div>
+</form>
+<style>
+    h1 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+form {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    border-color: #007bff;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.save-btn {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+}
+
+.save-btn:hover {
+    background-color: #218838;
+}
+
+.back-btn {
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+.back-btn:hover {
+    background-color: #e2e6ea;
+}
+
+</style>
+<script>
+    document.getElementById('addProductForm').addEventListener('submit', function (event) {
+        const requiredFields = document.querySelectorAll('#addProductForm [required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.style.borderColor = 'red';
+            } else {
+                field.style.borderColor = '#ddd';
+            }
+        });
+
+        if (!isValid) {
+            event.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+
+    // Add placeholder styling effects
+    const fields = document.querySelectorAll('#addProductForm input, #addProductForm textarea, #addProductForm select');
+    fields.forEach(field => {
+        field.addEventListener('focus', () => field.style.borderColor = '#007bff');
+        field.addEventListener('blur', () => field.style.borderColor = '#ddd');
+    });
+</script>
+
+{% endblock %}

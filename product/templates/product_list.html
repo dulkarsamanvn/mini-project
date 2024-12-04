@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<style>
+    /* Adjusted Styles to match your sidebar layout */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .btn-action {
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        text-decoration: none;
+        cursor: pointer;
+        font-weight: 600;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .add-product-btn {
+        background-color: #28a745;
+        color: #fff;
+        margin-bottom: 20px;
+    }
+
+    .edit-btn {
+        background-color: #f0f0f0;
+        color: #007bff;
+        border: 1px solid #007bff;
+    }
+
+    .delete-btn {
+        background-color: #f8d7da;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+
+    .manage-btn {
+        background-color: #e2e3e5;
+        color: #6c757d;
+        border: 1px solid #6c757d;
+    }
+
+    .btn-action:hover {
+        transform: scale(1.05);
+    }
+
+    .product-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .product-table th, .product-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .product-table th {
+        background-color: #f8f9fa;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .product-table td {
+        color: #555;
+    }
+
+    .product-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .product-table tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+</style>
+    <div class="main-content">
+        <h1 class="page-title">Product List</h1>
+        <a href="{% url 'product:add_product' %}" class="btn-action add-product-btn">Add New Product</a>
+
+        <div class="table-container">
+            <table class="product-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Brand</th>
+                        <th>Movement</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.description }}</td>
+                        <td>{{ product.category.name|default:"No Category" }}</td>
+                        <td>{{ product.brand.name|default:"No Brand" }}</td>
+                        <td>{{ product.get_movement_display }}</td>
+                        <td>
+                            <a href="{% url 'product:edit_product' product_id=product.id %}" class="btn-action edit-btn">Edit</a> |
+                            <a href="{% url 'product:delete_product' product_id=product.id %}" class="btn-action delete-btn">Delete</a> |
+                            <a href="{% url 'product:manage_variants' product_id=product.id %}" class="btn-action manage-btn">Manage Variants</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">No products available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        {% if messages %}
+        {% for message in messages %}
+        Toastify({
+             text: "{{ message }}",
+             duration: 3000,
+             close: true,
+             gravity: "top",
+             position: "center",
+             backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+        }).showToast();
+        {% endfor %}
+        {% endif %}
+     </script>
+{% endblock %}
+
+

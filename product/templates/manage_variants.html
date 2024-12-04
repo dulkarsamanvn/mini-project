@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+<div class="container">
+    <h1 class="text-center page-title">Manage Variants for {{ product.name }}</h1>
+    <a href="{% url 'product:product_list' %}" class="btn btn-success btn-sm ">Back to Product List</a>
+
+    <section class="add-variant">
+        <h3 class="section-title">Add New Variant</h3>
+        <form method="post" enctype="multipart/form-data" id="variant-form" class="form-container">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="case_color">Case Color:</label>
+                <input type="text" id="case_color" name="case_color" required placeholder="Enter case color" class="form-control input-field">
+            </div>
+            <div class="form-group">
+                <label for="dial_color">Dial Color:</label>
+                <input type="text" id="dial_color" name="dial_color" required placeholder="Enter dial color" class="form-control input-field">
+            </div>
+            <div class="form-group">
+                <label for="strap_material">Strap Material:</label>
+                <input type="text" id="strap_material" name="strap_material" required placeholder="Enter strap material" class="form-control input-field">
+            </div>
+            <div class="form-group">
+                <label for="price">Price:</label>
+                <input type="number" id="price" name="price" step="0.01" required placeholder="Enter price" class="form-control input-field">
+            </div>
+            <div class="form-group">
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" name="quantity" required placeholder="Enter quantity" class="form-control input-field">
+            </div>
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select id="status" name="status" class="form-control input-field">
+                    <option value="in_stock">In Stock</option>
+                    <option value="out_of_stock">Out of Stock</option>
+                </select>
+            </div>
+
+            <h3 class="subsection-title">Upload Images</h3>
+            <div class="form-group">
+                <input type="file" id="image-input" accept="image/*" class="form-control">
+            </div>
+            <div id="crop-container" class="crop-container">
+                <img id="image-to-crop" alt="Image to crop" class="crop-image">
+                <button type="button" id="crop-button" class="btn btn-primary mt-2">Crop and Save</button>
+            </div>
+            <div id="image-preview-container" class="image-preview-container mt-4"></div>
+
+            <button type="submit" class="btn btn-success mt-4">Add Variant</button>
+        </form>
+    </section>
+
+    <section class="existing-variants mt-5">
+        <h2 class="section-title">Existing Variants</h2>
+        <table class="table table-striped variant-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Case Color</th>
+                    <th>Dial Color</th>
+                    <th>Strap Material</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Images</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for variant in variants %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ variant.case_color }}</td>
+                    <td>{{ variant.dial_color }}</td>
+                    <td>{{ variant.strap_material }}</td>
+                    <td>{{ variant.price }}</td>
+                    <td>{{ variant.quantity }}</td>
+                    <td>{{ variant.get_status_display }}</td>
+                    <td>
+                        {% for image in variant.images.all %}
+                            <img src="{{ image.image.url }}" alt="Variant Image" class="variant-image">
+                        {% empty %}
+                            <span>No images.</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="{% url 'product:delete_variant' variant_id=variant.id %}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center">No variants available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<style>
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .page-title {
+        font-size: 2rem;
+        margin-bottom: 20px;
+        color: #333;
+    }
+    .form-container {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .input-field {
+        width: 100%;
+        max-width: 400px;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .section-title {
+        font-size: 1.5rem;
+        color: #444;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+    }
+    .btn {
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: #ffffff;
+        font-size: 12px;
+        padding: 8px 16px;
+    }
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: #ffffff;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: #ffffff;
+    }
+    .variant-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .variant-table th,
+    .variant-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .variant-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 12px;
+        color: #495057;
+    }
+    .variant-image {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-right: 5px;
+    }
+    .crop-container {
+        display: none;
+        margin-top: 15px;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        max-width: 300px;
+    }
+    .crop-image {
+        max-width: 100%;
+        max-height: 300px;
+        display: block;
+        margin: 0 auto 15px;
+    }
+    .image-preview {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+    @media (max-width: 768px) {
+        .container {
+            padding: 15px;
+        }
+        .input-field {
+            max-width: 100%;
+        }
+        .variant-table {
+            font-size: 14px;
+        }
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<script>
+    const imageInput = document.getElementById('image-input');
+    const cropContainer = document.getElementById('crop-container');
+    const imageToCrop = document.getElementById('image-to-crop');
+    const cropButton = document.getElementById('crop-button');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const form = document.getElementById('variant-form');
+    let cropper;
+
+    imageInput.addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imageToCrop.src = e.target.result;
+                cropContainer.style.display = 'block';
+                if (cropper) {
+                    cropper.destroy();
+                }
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    minContainerWidth: 250,
+                    minContainerHeight: 250,
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    cropButton.addEventListener('click', function () {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas({
+                width: 240,
+                height: 240,
+            });
+            canvas.toBlob(function (blob) {
+                const file = new File([blob], `image_${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+                // Preview the cropped image
+                const url = URL.createObjectURL(file);
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'image-preview';
+                imagePreviewContainer.appendChild(img);
+
+                // Append the file to the form
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.name = `image_${imagePreviewContainer.children.length - 1}`;
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                input.files = dataTransfer.files;
+                input.style.display = 'none';
+                form.appendChild(input);
+
+                // Reset for the next upload
+                cropContainer.style.display = 'none';
+                imageInput.value = '';
+                cropper.destroy();
+                cropper = null;
+            });
+        }
+    });
+
+       {% if messages %}
+       {% for message in messages %}
+       Toastify({
+            text: "{{ message }}",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+       }).showToast();
+       {% endfor %}
+       {% endif %}
+</script>
+{% endblock %}
+

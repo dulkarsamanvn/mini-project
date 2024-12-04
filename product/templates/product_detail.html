@@ -1,0 +1,550 @@
+{% extends 'userbase.html' %}
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <title>TISSOT T129407220300 Classic Dream Swissmatic Men's Watch</title> -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .breadcrumbs {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .breadcrumbs a {
+            color: #666;
+            text-decoration: none;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .product-images {
+            display: grid;
+            gap: 10px;
+        }
+
+        .main-image {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .thumbnail {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .product-info h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stock-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stock-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .color-options {
+            margin-bottom: 20px;
+        }
+
+        .color-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .color-circle:hover,
+        .color-circle.active {
+            border-color: #333;
+        }
+
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .button-primary {
+            background-color: #333;
+            color: white;
+            border: none;
+        }
+
+        .button-secondary {
+            background-color: white;
+            color: #333;
+            border: 1px solid #333;
+        }
+
+        .button-tertiary {
+            background-color: #f0f0f0;
+            color: #333;
+            border: none;
+        }
+
+        .tabs {
+            margin-top: 40px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+        }
+
+        .tab-button.active {
+            background-color: grey;
+            color: black;
+        }
+        .tab {
+            display: none;
+        } 
+        .tab.active {
+            display: block;
+        } 
+
+        .tab-content {
+            padding: 20px 0;
+        }
+
+        .similar-products {
+            margin-top: 40px;
+        }
+
+        .similar-products h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .product-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .similar-product img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .reviews {
+            margin-top: 40px;
+        }
+
+        .review {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .star {
+            color: #FFD700;
+        }
+
+        .faq {
+            margin-top: 40px;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 20px 0;
+        }
+
+        .faq-question {
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .faq-answer {
+            margin-top: 10px;
+            display: none;
+        }
+        .product-images {
+            position: relative;
+        }
+
+        .main-image-container {
+            position: relative;
+            overflow: hidden;
+            cursor: zoom-in;
+        }
+
+        .zoomed-image-container {
+            position: absolute;
+            top: 0;
+            left: 100%;
+            width: 100%;
+            height: 100%;
+            display: none;
+            border: 1px solid #e0e0e0;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        }
+
+        .zoomed-image {
+            width: 200%;
+            height: 200%;
+            background-repeat: no-repeat;
+            background-size: cover;
+            position: absolute;
+        }
+
+        .color-circle.active {
+            border: 2px solid #000;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="breadcrumbs">
+            <a href="{% url 'home' %}">Home</a> / <a href="#">{{ product.name }}</a>
+        </div>
+
+        <div class="product-grid">
+            <div class="product-images">
+                <div class="main-image-container">
+                    <img id="main-image" src="{{ primary_variant_images.0.image.url }}" alt="{{ product.name }}" class="main-image">
+                    <div class="zoomed-image-container">
+                        <div class="zoomed-image"></div>
+                    </div>
+                </div>
+                <div class="thumbnail-grid">
+                    {% for image in primary_variant_images %}
+                    <img src="{{ image.image.url }}" alt="{{ product.name }}" class="thumbnail" onclick="changeMainImage('{{ image.image.url }}')">
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="product-info">
+                <h1>{{ product.name }}</h1>
+                <p class="price">₹ {{ primary_variant.price }}</p>
+                <p>Shipping calculated at checkout.</p>
+
+                <div class="stock-info">
+                    {% if quantity > 0 %}
+                        <span class="stock-dot" style="background-color: green;"></span>
+                        <span>{{ status }} - {{ quantity }} item{% if quantity > 1 %}s{% endif %} left</span>
+                    {% else %}
+                        <span class="stock-dot" style="background-color: red;"></span>
+                        <span>{{ status }}</span>
+                    {% endif %}
+                </div>
+                
+
+                <div class="color-options">
+                    <p>Dial Colors:</p>
+                    {% for color in dial_colors %}
+                    <span class="color-circle" style="background-color: {{ color.dial_color }};"
+                        onclick="changeVariant('{{ color.dial_color }}')"></span>
+                    {% endfor %}
+                </div>
+
+                <button class="button button-primary">Add to cart</button>
+                <button class="button button-secondary">Buy now</button>
+                <button class="button button-tertiary">SAVE 5% ON THIS PRODUCT</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab-buttons">
+                <div class="tab-button active" data-tab="description">Description</div>
+                <div class="tab-button" data-tab="specification">Specification</div>
+            </div>
+            <div class="tab-content">
+                <!-- Description Tab -->
+                <div id="description" class="tab active">
+                    <p>{{ description }}</p>
+                </div>
+                
+                <!-- Specifications Tab -->
+                <div id="specification" class="tab">
+                    <ul>
+                        {% for key, value in specifications.items %}
+                            <li><strong>{{ key }}:</strong> {{ value }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="similar-products">
+            <h2>YOU MAY ALSO LIKE</h2>
+            <div class="product-grid-4">
+                <div class="similar-product">
+                    <img src="https://placeholder.com/200x200" alt="Similar Watch 1">
+                    <p>TISSOT T-SPORT CHRONO XL CLASSIC CHRONOGRAPH MEN WATCH</p>
+                    <p>₹ 49,000.00</p>
+                </div>
+                <div class="similar-product">
+                    <img src="https://placeholder.com/200x200" alt="Similar Watch 2">
+                    <p>TISSOT T-SPORT CHRONO XL CLASSIC CHRONOGRAPH MEN WATCH</p>
+                    <p>₹ 48,000.00</p>
+                </div>
+                <div class="similar-product">
+                    <img src="https://placeholder.com/200x200" alt="Similar Watch 3">
+                    <p>TISSOT CARSON PREMIUM CHRONOGRAPH MEN WATCH</p>
+                    <p>₹ 44,000.00</p>
+                </div>
+                <div class="similar-product">
+                    <img src="https://placeholder.com/200x200" alt="Similar Watch 4">
+                    <p>TISSOT CARSON PREMIUM CHRONOGRAPH MEN WATCH</p>
+                    <p>₹ 44,000.00</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="reviews">
+            <h2>REVIEWS (3)</h2>
+            <div class="review">
+                <div>
+                    <span class="star">★★★★★</span>
+                </div>
+                <p><strong>Kulkar Kanan</strong></p>
+                <p>Nice Chain Bracelet</p>
+            </div>
+            <div class="review">
+                <div>
+                    <span class="star">★★★★★</span>
+                </div>
+                <p><strong>Sakshi Alok</strong></p>
+                <p>Good watch</p>
+            </div>
+            <div class="review">
+                <div>
+                    <span class="star">★★★★★</span>
+                </div>
+                <p><strong>Kamya Malyan</strong></p>
+                <p>Best Watch Ever</p>
+            </div>
+        </div>
+
+        <div class="faq">
+            <div class="faq-item">
+                <div class="faq-question">Luxe Tickers</div>
+                <div class="faq-answer">Information about Luxe Tickers...</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">What is the delivery Time</div>
+                <div class="faq-answer">Delivery time information...</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">How Brands are available at the Luxe Tickers</div>
+                <div class="faq-answer">Available brands information...</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">How can I contact Customer Service</div>
+                <div class="faq-answer">Customer service contact information...</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">Do you have Physical stores</div>
+                <div class="faq-answer">Physical store information...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function changeMainImage(url) {
+            const mainImage = document.getElementById('main-image');
+            mainImage.src = url;
+        }
+    
+        // Fetch and update variant details dynamically
+        function changeVariant(dialColor) {
+            fetch(`?dial_color=${dialColor}`, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update price
+                document.querySelector('.price').textContent = `₹ ${data.price}`;
+
+                // Update quantity and status
+                const stockInfo = document.querySelector('.stock-info');
+                if (data.quantity > 0) {
+                    stockInfo.innerHTML = `
+                        <span class="stock-dot" style="background-color: green;"></span>
+                        <span>${data.status} - ${data.quantity} item${data.quantity > 1 ? 's' : ''} left</span>
+                    `;
+                } else {
+                    stockInfo.innerHTML = `
+                        <span class="stock-dot" style="background-color: red;"></span>
+                        <span>${data.status}</span>
+                    `;
+                }
+
+                // Update main image
+                const mainImage = document.getElementById('main-image');
+                mainImage.src = data.images[0];
+
+                // Update thumbnails
+                const thumbnailContainer = document.querySelector('.thumbnail-grid');
+                thumbnailContainer.innerHTML = ''; // Clear existing thumbnails
+                data.images.forEach(url => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = "Product Image";
+                    img.className = "thumbnail";
+                    img.onclick = () => changeMainImage(url);
+                    thumbnailContainer.appendChild(img);
+                });
+
+                // Update specifications
+                const specificationsContainer = document.getElementById('specification');
+                let specificationsHTML = '<ul>';
+                for (const [key, value] of Object.entries(data.specifications)) {
+                    specificationsHTML += `<li><strong>${key}:</strong> ${value}</li>`;
+                }
+                specificationsHTML += '</ul>';
+                specificationsContainer.innerHTML = specificationsHTML;
+            });
+        }
+
+    
+        // Image Zoom Functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainImageContainer = document.querySelector('.main-image-container');
+            const mainImage = document.getElementById('main-image');
+            const zoomedImageContainer = document.querySelector('.zoomed-image-container');
+            const zoomedImage = document.querySelector('.zoomed-image');
+    
+            mainImageContainer.addEventListener('mouseenter', () => {
+                zoomedImageContainer.style.display = 'block';
+            });
+    
+            mainImageContainer.addEventListener('mousemove', (e) => {
+                const containerRect = mainImageContainer.getBoundingClientRect();
+                const x = e.clientX - containerRect.left;
+                const y = e.clientY - containerRect.top;
+    
+                // Calculate percentage positions
+                const xPercent = (x / containerRect.width) * 100;
+                const yPercent = (y / containerRect.height) * 100;
+    
+                // Set zoomed image background
+                zoomedImage.style.backgroundImage = `url(${mainImage.src})`;
+                zoomedImage.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
+            });
+    
+            mainImageContainer.addEventListener('mouseleave', () => {
+                zoomedImageContainer.style.display = 'none';
+            });
+    
+            // Color circle selection
+            const colorCircles = document.querySelectorAll('.color-circle');
+            colorCircles.forEach(circle => {
+                circle.addEventListener('click', () => {
+                    // Remove active class from all color circles
+                    colorCircles.forEach(c => c.classList.remove('active'));
+                    // Add active class to clicked circle
+                    circle.classList.add('active');
+    
+                    // Fetch variant details based on the selected color
+                    const dialColor = circle.dataset.dialColor;
+                    changeVariant(dialColor);
+                });
+            });
+        });
+    
+        // Simple tab functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabs = document.querySelectorAll('.tab');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove active class from all buttons and tabs
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabs.forEach(tab => tab.classList.remove('active'));
+
+                    // Add active class to the clicked button and corresponding tab
+                    button.classList.add('active');
+                    const targetTab = button.getAttribute('data-tab');
+                    document.getElementById(targetTab).classList.add('active');
+                });
+            });
+        });
+
+    
+        // Simple FAQ functionality
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        faqQuestions.forEach(question => {
+            question.addEventListener('click', () => {
+                const answer = question.nextElementSibling;
+                answer.style.display = answer.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+    
+        // In a real implementation, you would add more JavaScript for dynamic content loading,
+        // form submissions, etc.
+    </script>
+    
+</body>
+{% endblock %}

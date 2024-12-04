@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXE TICKERS - OTP Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 40px 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 40px;
+            background: #f0f0f0;
+            border-radius: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            .product-image {
+                display: none;
+            }
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            grid-column: 1 / -1;
+        }
+        .verification-section {
+            padding-right: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .email-text {
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .otp-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .otp-input {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            background: white;
+        }
+        .otp-input:focus {
+            outline: none;
+            border-color: #000;
+        }
+        .timer {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .resend {
+            color: #000;
+            text-decoration: none;
+            font-size: 14px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        .resend:disabled {
+            color: #888;
+            cursor: not-allowed;
+        }
+        .submit-btn {
+            width: 100%;
+            max-width: 200px;
+            padding: 12px;
+            background-color: #000;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 24px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+        .back-btn::before {
+            content: "←";
+            margin-right: 8px;
+        }
+        .product-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .product-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        .error {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        #otpExpiredMessage {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">LUXE TICKERS</div>
+
+        <div class="verification-section">
+            <h1>OTP Verification</h1>
+            <p class="email-text">Enter the OTP sent to your email</p>
+            
+            <form method="POST" id="otpForm">
+                {% csrf_token %}
+                <div class="otp-container">
+                    <input type="text" name="otp" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" name="otp" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" name="otp" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" name="otp" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" name="otp" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                    <input type="text" name="otp" class="otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                </div>
+                
+                <div class="timer">
+                    <span id="countdown">00:56</span> sec
+                    <span id="resendLink" class="resend" type="button">Re-send</span>
+                </div>
+                
+                <div id="otpExpiredMessage">OTP has expired. Please request a new OTP.</div>
+                
+                <button type="submit" class="submit-btn">Submit</button>
+            </form>
+            
+            <a href="{% url 'signup' %}" class="back-btn">Back</a>
+        </div>
+        
+        <div class="product-image">
+            <img src="https://idestiny.in/wp-content/uploads/2024/10/Apple_Watch_Ultra_2_49mm_Black_Titanium_Milanese_Loop_Black_PDP_Image_Position_8__en-IN-600x600.jpg" alt="Luxury Watch">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const countdownEl = document.getElementById('countdown');
+            const resendLink = document.getElementById('resendLink');
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const submitBtn = document.querySelector('.submit-btn');
+            const otpExpiredMessage = document.getElementById('otpExpiredMessage');
+
+            let timeLeft = 56;
+            let timerInterval;
+
+            function updateTimer() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                countdownEl.textContent = `00:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    
+                    // Disable inputs
+                    otpInputs.forEach(input => {
+                        input.disabled = true;
+                        input.value = '';
+                    });
+
+                    // Enable resend link
+                    resendLink.classList.remove('disabled');
+                    resendLink.style.cursor = 'pointer';
+
+                    // Disable submit button
+                    submitBtn.disabled = true;
+
+                    // Show expiration message
+                    otpExpiredMessage.style.display = 'block';
+                }
+
+                timeLeft--;
+            }
+
+            // Start the timer immediately
+            timerInterval = setInterval(updateTimer, 1000);
+
+            // Resend link functionality
+            resendLink.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) return;
+
+                const resendInput = document.createElement('input');
+                resendInput.type = 'hidden';
+                resendInput.name = 'resend_otp';
+                resendInput.value = 'true';
+                document.getElementById('otpForm').appendChild(resendInput);
+                document.getElementById('otpForm').submit();
+            });
+        });
+
+        // Auto-focus next input
+        document.querySelectorAll('.otp-input').forEach((input, index) => {
+            input.addEventListener('input', function() {
+                if (this.value && index < 5) {
+                    document.querySelectorAll('.otp-input')[index + 1].focus();
+                }
+            });
+            
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !this.value && index > 0) {
+                    document.querySelectorAll('.otp-input')[index - 1].focus();
+                }
+            });
+        });
+
+        {% if messages %}
+        {% for message in messages %}
+        Toastify({
+            text: "{{ message }}",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+        }).showToast();
+        {% endfor %}
+        {% endif %}
+    </script>
+</body>
+</html>
