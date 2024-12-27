@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block content %}
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Order List</title>
+    <style>
+
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background-color: #3498db;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        tr:hover {
+            background-color: #e8f4ff;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            font-size: 14px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #777;
+        }
+
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+
+            tr {
+                margin-bottom: 15px;
+            }
+
+            td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+            }
+
+            td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                font-weight: bold;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>Admin Order List</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Total Amount</th>
+                <th>Payment Method</th>
+                <th>Status</th>
+                <th>Update Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.order_date|date:"d M Y H:i" }}</td>
+                <td>{{ order.total_amount }}</td>
+                <td>{{ order.payment_method }}</td>
+                <td>{{ order.get_order_status_display }}</td>
+                <td>
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ order.id }}">
+                        <select name="order_status" onchange="this.form.submit()">
+                            {% for status, label in order.ORDER_STATUS_CHOICES %}
+                            <option value="{{ status }}" 
+                                    {% if status == order.order_status %}selected{% endif %}
+                                    {% if order.order_status == 'CANCELED' and status != 'CANCELED' %}disabled{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                    
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No orders available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </tbody>
+    </table>
+    <script>
+        {% if messages %}
+           {% for message in messages %}
+           Toastify({
+               text: "{{ message }}",
+               duration: 3000,
+               close: true,
+               gravity: "top",
+               position: "center",
+               backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+           }).showToast();
+           {% endfor %}
+       {% endif %}
+   </script>
+</body>
+{% endblock %}

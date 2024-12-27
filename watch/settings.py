@@ -45,6 +45,10 @@ AUTHENTICATION_BACKENDS = [
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY')
 
+RAZORPAY_KEY_ID=config('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET=config('RAZORPAY_KEY_SECRET')
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -64,6 +68,12 @@ INSTALLED_APPS = [
     'category',
     'brand',
     'product',
+    'profile_management',
+    'cart',
+    'orders',
+    'wishlist',
+    'offer_management',
+    'wallet',
     'social_django',
 ]
 
@@ -148,6 +158,8 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
+# TIME_ZONE = 'Asia/Kolkata'
+# USE_TZ = True
 
 USE_I18N = True
 

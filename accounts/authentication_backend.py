@@ -9,8 +9,6 @@ class EmailBackend(BaseBackend):
         try:
             # Try to get the user by email
             user = CustomUser.objects.get(email=email)
-            # if not user.is_active:
-            #     return None  # Block the user if inactive
             if user.check_password(password):
                 return user  # Return the user if password is correct
         except CustomUser.DoesNotExist:

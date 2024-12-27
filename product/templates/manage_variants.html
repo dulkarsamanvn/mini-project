@@ -264,11 +264,11 @@
     cropButton.addEventListener('click', function () {
         if (cropper) {
             const canvas = cropper.getCroppedCanvas({
-                width: 240,
-                height: 240,
+                width: imageToCrop.naturalWidth,
+                height: imageToCrop.naturalHeight,
             });
             canvas.toBlob(function (blob) {
-                const file = new File([blob], `image_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                const file = new File([blob], `image_${Date.now()}.jpg`, { type: 'image/jpeg', quality: 0.9});
 
                 // Preview the cropped image
                 const url = URL.createObjectURL(file);

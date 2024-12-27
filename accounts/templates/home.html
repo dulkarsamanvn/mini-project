@@ -1,8 +1,10 @@
 {% extends "userbase.html" %}
 {% block content %}
-
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <div class="hero">
-    <img src="https://png.pngtree.com/background/20210710/original/pngtree-black-dynamic-watch-simple-black-banner-picture-image_1032760.jpg"
+    <img src="https://i.pinimg.com/originals/cd/d3/9d/cdd39d5cb98bdc9c291b0b45e9e3aab1.jpg"
         alt="Tissot Watch Hero" style="width: 100%; height: 500px; object-fit: cover;">
 </div>
 
@@ -14,18 +16,6 @@
     <div class="products-layout">
         <!-- Filters Sidebar -->
         <aside class="filters">
-            <!-- <div class="filter-group">
-                <div class="filter-header" onclick="toggleFilter(this)">
-                    <span class="filter-name">Brand</span>
-                    <span class="toggle-icon">›</span>
-                    <button class="clear-btn">Clear</button>
-                </div>
-                <div class="filter-content">
-                    <label><input type="checkbox"> Tissot</label>
-                    <label><input type="checkbox"> Rado</label>
-                    <label><input type="checkbox"> Seiko</label>
-                </div>
-            </div> -->
 
             <div class="filter-group">
                 <div class="filter-header" onclick="toggleFilter(this)">
@@ -51,9 +41,9 @@
                     <button class="clear-btn">Clear</button>
                 </div>
                 <div class="filter-content">
-                    <label><input type="checkbox"> Under ₹20,000</label>
-                    <label><input type="checkbox"> ₹20,000 - ₹50,000</label>
-                    <label><input type="checkbox"> Above ₹50,000</label>
+                    <label><input type="checkbox" name="price" value="under_20000"> Under ₹20,000</label>
+                    <label><input type="checkbox" name="price" value="20000_50000"> ₹20,000 - ₹50,000</label>
+                    <label><input type="checkbox" name="price" value="above_50000"> Above ₹50,000</label>
                 </div>
             </div>
 
@@ -74,7 +64,7 @@
                 </div>
             </div>
 
-            <script>
+            <!-- <script>
                 // Function to toggle the visibility of the filter content
                 function toggleFilter(headerElement) {
                     const filterContent = headerElement.nextElementSibling;
@@ -93,20 +83,7 @@
                     const checkboxes = document.querySelectorAll('.filter-content input[type="checkbox"]');
                     checkboxes.forEach(checkbox => checkbox.checked = false);
                 }
-            </script>
-
-            <!-- <div class="filter-group">
-                <div class="filter-header" onclick="toggleFilter(this)">
-                    <span class="filter-name">Category</span>
-                    <span class="toggle-icon">›</span>
-                    <button class="clear-btn">Clear</button>
-                </div>
-                <div class="filter-content">
-                    <label><input type="checkbox"> Chronograph</label>
-                    <label><input type="checkbox"> Automatic</label>
-                    <label><input type="checkbox"> Digital</label>
-                </div>
-            </div> -->
+            </script> -->
 
             <div class="filter-group">
                 <div class="filter-header" onclick="toggleFilter(this)">
@@ -153,66 +130,94 @@
         <div class="products-content">
             <div class="products-top">
                 <div class="sort-by">
-                    <select>
-                        <option>Sort by: Featured</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
-                        <option>Newest First</option>
+                    <select name="sort_by" onchange="applySorting()">
+                        <option value="">Sort By</option>
+                        <option value="price_low_to_high">Price: Low to High</option>
+                        <option value="price_high_to_low">Price: High to Low</option>
+                        <option value="newest_first">Newest First</option>
+                        <option value="a_to_z">Name: A to Z</option>
+                        <option value="z_to_a">Name: Z to A</option>
                     </select>
                 </div>
             </div>
             <div class="products-grid">
                 {% for product in products %}
                 <div class="product-card">
-                    <a href="{% url 'product:product_detail' product.id %}">
+                    {% if product.offer_discount > 0 %}
+                    <p class="offer_discount" >
+                    {{ product.offer_discount|floatformat:0 }}% off</p>
+                    {% endif %}
+                    <a style="text-decoration: none;" href="{% url 'product:product_detail' product.id %}">
                         <img src="{{ product.primary_image_url }}" alt="{{ product.name }}" class="product-image">
                         <h3>{{ product.name }}</h3>
-                        <p class="price">₹ {{ product.price }}</p>
+                        <p class="price">
+                            {% if product.discounted_price and product.discounted_price < product.price %}
+                                <span class="original-price" style="text-decoration: line-through; color: grey;">₹ {{ product.price }}</span>
+                                <span class="discounted-price" style="color: red; font: bold;">₹ {{ product.discounted_price }}</span>
+                            {% else %}
+                                ₹ {{ product.price }}
+                            {% endif %}
+                        </p>
                     </a>
-                    <!-- <p>
-                            <strong>Dial Color:</strong> {{ product.dial_color }}
-                        </p> -->
-                    <!-- <div class="case-colors">
-                            <strong>Case Color:</strong>
-                            {% for color in product.other_case_colors %}
-                                <span class="color-circle" style="background-color: {{ color }};"></span>
-                            {% endfor %}
-                        </div> -->
                     <div class="dial-colors">
-                        <!-- <strong>Dial Colors:</strong> -->
                         {% for color in product.dial_colors %}
-                        <!-- <p>{{ color }}</p> Debugging output: show raw color values -->
                         <span class="color-circle" style="background-color: {{ color }};"></span>
                         {% empty %}
                         <p>No dial colors available.</p>
                         {% endfor %}
                     </div>
-
-
+                    <button 
+                        class="btn add-to-wishlist" 
+                        data-product-id="{{ product.id }}" 
+                        style="background: transparent; border: none; cursor: pointer;">
+                        <i class="{% if product.in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="font-size: 20px;"></i>
+                    </button>
                 </div>
                 {% empty %}
                 <p>No products available.</p>
                 {% endfor %}
             </div>
-
-
-            <!-- <div class="pagination">
-                <button class="prev-btn">‹</button>
-                <div class="page-numbers">
-                    <span class="active">1</span>
-                    <span>2</span>
-                    <span>3</span>
-                    <span>4</span>
-                    <span>...</span>
-                    <span>46</span>
+            
+            <!-- <div class="products-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    <a style="text-decoration: none;" href="{% url 'product:product_detail' product.id %}">
+                        <img src="{{ product.primary_image_url }}" alt="{{ product.name }}" class="product-image">
+                        <h3>{{ product.name }}</h3>
+                        <p class="price">₹ {{ product.price }}</p>
+                    </a>
+                    <div class="dial-colors">
+                        {% for color in product.dial_colors %}
+                        <span class="color-circle" style="background-color: {{ color }};"></span>
+                        {% empty %}
+                        <p>No dial colors available.</p>
+                        {% endfor %}
+                    </div>
+                    <button 
+    class="btn add-to-wishlist" 
+    data-product-id="{{ product.id }}" 
+    style="background: transparent; border: none; cursor: pointer;"
+>
+    <i class="{% if product.in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="font-size: 20px;"></i>
+</button>
                 </div>
-                <button class="next-btn">›</button>
+                {% empty %}
+                <p>No products available.</p>
+                {% endfor %}
             </div> -->
         </div>
     </div>
 </main>
 
 <style>
+    .offer_discount{
+        color: red;
+        width: 70px;
+        height: 20px;
+        border-radius: 11px; 
+        position: absolute;
+        top: 15px;
+    }
     .products-container {
         padding: 20px 40px;
         max-width: 1400px;
@@ -250,9 +255,9 @@
     }
 
     .product-card {
+        position: relative;  /* This allows absolute positioning inside the card */
         border: 1px solid #e0e0e0;
         padding: 12px;
-        /* Reduced from 15px */
         text-align: center;
         border-radius: 4px;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -488,6 +493,25 @@
         background: white;
         cursor: pointer;
     }
+    .add-to-wishlist {
+        position: absolute; /* Position the button at the bottom-right */
+        top: 25px;
+        right:25px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+    }
+
+    .add-to-wishlist i {
+        font-size: 20px;
+        color: #333;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+        
 
     @media (max-width: 768px) {
         .products-container {
@@ -505,7 +529,165 @@
 </style>
 
 <script>
-    function toggleFilter(header) {
+    document.querySelectorAll('.add-to-wishlist').forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.dataset.productId;
+            const url = "{% url 'wishlist:add_to_wishlist' 0 %}".replace("0", productId);
+            fetch(url, {
+                method: 'GET', // Use POST in production with CSRF token
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                Toastify({
+                text: data.message,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "center",
+                backgroundColor: data.success ? "green" : "red",
+            }).showToast();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+
+
+
+
+// --------------------------------------------------------------------------------
+//   function applySorting() {
+//     const sortBy = document.querySelector('select[name="sort_by"]').value;
+//     console.log("Sorting by:", sortBy); // Debugging log to check selected value
+
+//     // Create the query string for the URL
+//     const params = new URLSearchParams();
+//     if (sortBy) params.set('sort_by', sortBy);
+
+//     // Get the current URL and update it with the sort parameter
+//     const url = new URL(window.location.href);
+//     url.search = params.toString();
+
+//     console.log("Request URL:", url); // Debugging log to check URL
+
+//     // Send the request to get the sorted products
+//     fetch(url, {
+//         method: 'GET',
+//         headers: {
+//         'X-Requested-With': 'XMLHttpRequest'  // Add this header for AJAX requests
+//     }
+//     })
+//     .then(response => {
+//         console.log("Response Status:", response.status); // Check response status
+//         if (!response.ok) {
+//             throw new Error('Network response was not ok');
+//         }
+//         return response.json();
+//     })
+//     .then(data => {
+//         console.log("Response Data:", data); // Debugging log to check the response data
+
+//         // Update the product list with the sorted products
+//         const productsContainer = document.querySelector('.products-grid');
+//         productsContainer.innerHTML = '';
+//         productsContainer.innerHTML = data.products.map(product => {
+//             const imageUrl = product.primary_image_url || 'path/to/default-image.jpg';  // Fallback image
+//             return `
+//                 <div class="product-card">
+//                     <a href="/product/${product.id}">
+//                         <img src="${imageUrl}" alt="${product.name}" class="product-image">
+//                         <h3>${product.name}</h3>
+//                         <p class="price">₹ ${product.price}</p>
+//                     </a>
+//                     <div class="dial-colors">
+//                         ${product.dial_colors.map(color => `<span class="color-circle" style="background-color: ${color};"></span>`).join('')}
+//                     </div>
+//                 </div>
+//             `;
+//         }).join('');
+//     })
+//     .catch(error => {
+//         console.error("Error fetching data:", error); // Log any errors
+//         alert("Something went wrong while fetching products. Please try again.");
+//     });
+// }
+function applySorting() {
+    const sortBy = document.querySelector('select[name="sort_by"]').value;
+    console.log("Sorting by:", sortBy); // Debugging log to check selected value
+
+    // Create the query string for the URL
+    const params = new URLSearchParams();
+    if (sortBy) params.set('sort_by', sortBy);
+
+    // Get the current URL and update it with the sort parameter
+    const url = new URL(window.location.href);
+    url.search = params.toString();
+
+    console.log("Request URL:", url); // Debugging log to check URL
+
+    // Send the request to get the sorted products
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'  // Add this header for AJAX requests
+        }
+    })
+    .then(response => {
+        console.log("Response Status:", response.status); // Check response status
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log("Response Data:", data); // Debugging log to check the response data
+
+        // Update the product list with the sorted products
+        const productsContainer = document.querySelector('.products-grid');
+        productsContainer.innerHTML = '';
+        productsContainer.innerHTML = data.products.map(product => {
+            const imageUrl = product.primary_image_url || 'path/to/default-image.jpg';  // Fallback image
+            const wishlistIconClass = product.in_wishlist ? 'fas' : 'far';  // Icon class based on wishlist state
+
+            return `
+                <div class="product-card">
+                    ${product.offer_discount > 0 ? `<p class="offer_discount">${product.offer_discount}% off</p>` : ''}
+                    <a style="text-decoration: none;"  href="/product/${product.id}">
+                        <img src="${imageUrl}" alt="${product.name}" class="product-image">
+                        <h3>${product.name}</h3>
+                        <p class="price">
+                            ${product.discounted_price && product.discounted_price < product.price 
+                                ? `<span class="original-price" style="text-decoration: line-through; color: grey;">₹ ${product.price}</span>
+                                   <span class="discounted-price" style="color: red; font-weight: bold;">₹ ${product.discounted_price}</span>`
+                                : `₹ ${product.price}`}
+                        </p>
+                    </a>
+                    <div class="dial-colors">
+                        ${product.dial_colors.map(color => `<span class="color-circle" style="background-color: ${color};"></span>`).join('')}
+                    </div>
+                    <button 
+                        class="btn add-to-wishlist" 
+                        data-product-id="${product.id}" 
+                        style="background: transparent; border: none; cursor: pointer;">
+                        <i class="${wishlistIconClass} fa-heart" style="font-size: 20px;"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+    })
+    .catch(error => {
+        console.error("Error fetching data:", error); // Log any errors
+        alert("Something went wrong while fetching products. Please try again.");
+    });
+}
+
+
+
+
+
+function toggleFilter(header) {
         const filterGroup = header.parentElement;
         filterGroup.classList.toggle('active');
     }
@@ -514,6 +696,11 @@
         const checkboxes = document.querySelectorAll('.filter-content input[type="checkbox"]');
         checkboxes.forEach(checkbox => checkbox.checked = false);
     }
+
+
+
+
+
 </script>
 
 {% endblock %}

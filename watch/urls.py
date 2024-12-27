@@ -24,6 +24,12 @@ urlpatterns = [
     path('category/', include('category.urls')),
     path('brand/', include('brand.urls')),
     path('product/', include('product.urls')),
+    path('profile/', include('profile_management.urls')),
+    path('cart/', include('cart.urls')),
+    path('orders/', include('orders.urls')),
+    path('wishlist/', include('wishlist.urls')),
+    path('offer-management/', include('offer_management.urls')),
+    path('wallet/', include('wallet.urls')),
     path('auth/', include('social_django.urls', namespace='social')),
     
 ]

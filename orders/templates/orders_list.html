@@ -1,0 +1,337 @@
+{% extends "userbase.html" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<style>
+    /* Container and Layout */
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    /* Breadcrumbs Styling */
+    .breadcrumbs {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 1rem;
+        padding: 0.5rem 0;
+    }
+
+    .breadcrumbs a {
+        text-decoration: none;
+        color: #333;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumbs a:hover {
+        color: #ff9900;
+    }
+
+    .breadcrumbs::after {
+        content: "";
+        display: block;
+        height: 1px;
+        background: #e0e0e0;
+        margin-top: 0.5rem;
+    }
+
+    .account-name {
+        margin-bottom: 20px;
+        margin-left: 5px;
+    }
+
+    /* Dashboard Layout */
+    .dashboard {
+        display: flex;
+        gap: 2rem;
+    }
+
+    /* Sidebar Styling */
+    .sidebar {
+        width: 250px;
+        background: #f0f0f0;
+        padding: 1.5rem;
+        border-radius: 8px;
+        position: sticky;
+        top: 100px; 
+        height: fit-content;
+    }
+
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+    }
+
+    .sidebar-menu li {
+        margin-bottom: 1.25rem;
+    }
+
+    .sidebar-menu a {
+        color: #333;
+        text-decoration: none;
+        font-size: 1.1rem;
+        display: block;
+        padding: 0.5rem 0;
+        transition: color 0.3s ease;
+    }
+
+    .sidebar-menu a:hover {
+        color: #ff9900;
+    }
+
+    /* Main Content */
+    .main-content {
+        flex: 1;
+    }
+
+    /* Order Card */
+    .order-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    .order-date {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 14px;
+        color: #333;
+        font-weight: bold;
+    }
+
+    .delivery-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .delivery-icon {
+        margin-right: 10px;
+        font-size: 1.5rem;
+        color: #ff9900;
+    }
+
+    .delivery-info span {
+        font-weight: bold;
+    }
+
+    .delivery-info .cancelled {
+        color: red;
+    }
+
+    .product {
+        display: flex;
+        align-items: center;
+        margin: 15px 0;
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        margin-right: 15px;
+    }
+
+    .product-details h3 {
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+
+    .product-id {
+        color: #666;
+        font-size: 12px;
+    }
+
+    .price {
+        font-weight: bold;
+        margin-top: 5px;
+        color: #333;
+    }
+
+    .progress-track {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 30px 0;
+        position: relative;
+    }
+
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 1;
+    }
+
+    .step-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #ff9900;
+        margin-bottom: 8px;
+    }
+
+    .step-label {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .progress-line {
+        position: absolute;
+        top: 10px;
+        left: 10%;
+        right: 10%;
+        height: 2px;
+        background: #ddd;
+    }
+
+    .progress-line-filled {
+        position: absolute;
+        top: 10px;
+        left: 10%;
+        width: 50%;
+        height: 2px;
+        background: #ff9900;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    .cancel-btn {
+        background: #ff9900;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        position: absolute;
+        /* top: 20px; */
+        right: 20px;
+    }
+
+    .cancel-btn:hover {
+        background-color: #e68a00;
+    }
+
+    .exchange-info {
+        color: #666;
+        font-size: 12px;
+        margin-top: 15px;
+    }
+
+    .rating {
+        color: #666;
+        margin-top: 10px;
+    }
+</style>
+
+<div class="container">
+    <!-- Breadcrumbs Navigation -->
+    <div class="breadcrumbs">
+        <a href="{% url 'home' %}">Home</a> /
+        <a href="{% url 'profile_management:profile_overview' %}">Account</a> /
+        <a href="{% url 'orders:orders_list' %}">Orders</a>
+    </div>
+
+    <!-- Account Header -->
+    <div class="account-name">
+        <h3>ACCOUNT</h3>
+    </div>
+
+    <div class="dashboard">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav>
+                <ul class="sidebar-menu">
+                    <li><a href="{% url 'profile_management:profile_overview' %}">Overview</a></li>
+                    <li><a href="#wallet">Wallet</a></li>
+                    <li><a href="{% url 'orders:orders_list' %}">Orders & Returns</a></li>
+                    <li><a href="{% url 'profile_management:address_list' %}">Addresses</a></li>
+                    <li><a href="{% url 'profile_management:profile_details' %}">Profile</a></li>
+                    <li><a href="{% url 'profile_management:edit_profile' %}">Edit Profile</a></li>
+                    <li><a href="#delete-account">Delete Account</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content: Orders -->
+        <main class="main-content">
+            <h2>Your Orders</h2>
+
+            {% for order in orders %}
+            <div class="order-card">
+                <div class="delivery-info">
+                    <span class="delivery-icon">🚚</span>
+                    <span class="{% if order.order_status == 'CANCELLED' %}cancelled{% endif %}">{{ order.order_status }}</span>
+                </div>
+            
+                <!-- Order Date (Positioned at Top Right) -->
+                <div class="order-date">
+                    <strong>Date:</strong> {{ order.order_date|date:"d M Y " }}
+                </div>
+            
+                <div class="product">
+                    <div class="product_new" style="line-height: 2;">
+                        <strong>Order ID:</strong> {{ order.id }}<br>
+                        <strong>Total:</strong> ₹{{ order.total_amount }}<br>
+                        <strong>Delivering Address:</strong>
+                         {{ order.address.name }} ,
+                         {{ order.address.address_line1 }},
+                         {{ order.address.phone }},
+                         {{ order.address.city }} , {{order.address.postal_code}}
+                         {{order.address.state}},
+                    </div>
+                </div>
+            
+                <a href="{% url 'orders:order_items' order.id %}" class="btn btn-primary">View Items</a>
+                {% if order.order_status == 'PENDING' %}
+                <a href="{% url 'orders:cancel_order' order.id %}" style="text-decoration: none;" class="cancel-btn">Cancel Order</a>
+                {% endif %}
+            
+                {% if order.order_status == 'DELIVERED' %}
+                <p class="exchange-info">For return or exchange, please contact support.</p>
+                <p class="rating">Rate this product: ⭐⭐⭐⭐⭐</p>
+                {% endif %}
+            </div>
+            
+            {% endfor %}
+        </main>
+    </div>
+</div>
+<script>
+     {% if messages %}
+        {% for message in messages %}
+        Toastify({
+            text: "{{ message }}",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+        }).showToast();
+        {% endfor %}
+    {% endif %}
+</script>
+{% endblock %}

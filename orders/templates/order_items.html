@@ -1,0 +1,357 @@
+{% extends "userbase.html" %}
+
+{% block content %}
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .breadcrumbs {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 1rem;
+        padding: 0.5rem 0;
+    }
+
+    .breadcrumbs a {
+        text-decoration: none;
+        color: #333;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumbs a:hover {
+        color: #ff9900;
+    }
+
+    .breadcrumbs::after {
+        content: "";
+        display: block;
+        height: 1px;
+        background: #e0e0e0;
+        margin-top: 0.5rem;
+    }
+
+    .account-name {
+        margin-bottom: 20px;
+        margin-left: 5px;
+    }
+
+    .dashboard {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .sidebar {
+        width: 250px;
+        background: #f0f0f0;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+    }
+
+    .sidebar-menu li {
+        margin-bottom: 1.25rem;
+    }
+
+    .sidebar-menu a {
+        color: #333;
+        text-decoration: none;
+        font-size: 1.1rem;
+        display: block;
+        padding: 0.5rem 0;
+        transition: color 0.3s ease;
+    }
+
+    .sidebar-menu a:hover {
+        color: #ff9900;
+    }
+
+    .main-content {
+        flex: 1;
+    }
+
+    .profile-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .profile-avatar {
+        width: 64px;
+        height: 64px;
+        background: #ccc;
+        border-radius: 50%;
+    }
+
+    .edit-profile-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        background: #ff9900;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .edit-profile-btn:hover {
+        background-color: #e68a00;
+    }
+
+    .order-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .delivery-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .delivery-icon {
+        margin-right: 10px;
+        font-size: 1.5rem;
+        color: #ff9900;
+    }
+
+    .product {
+        display: flex;
+        align-items: center;
+        margin: 15px 0;
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        margin-right: 15px;
+    }
+
+    .product-details h3 {
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+
+    .product-id {
+        color: #666;
+        font-size: 12px;
+    }
+
+    .price {
+        font-weight: bold;
+        margin-top: 5px;
+        color: #333;
+    }
+
+    .progress-track {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 30px 0;
+        position: relative;
+    }
+
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 1;
+    }
+
+    .step-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #ff9900;
+        margin-bottom: 8px;
+    }
+
+    .step-label {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .progress-line {
+        position: absolute;
+        top: 10px;
+        left: 10%;
+        right: 10%;
+        height: 2px;
+        background: #ddd;
+    }
+
+    .progress-line-filled {
+        position: absolute;
+        top: 10px;
+        left: 10%;
+        width: 50%;
+        height: 2px;
+        background: #ff9900;
+    }
+
+    .cancel-btn {
+        background: #ff9900;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        float: right;
+        cursor: pointer;
+    }
+
+    .exchange-info {
+        color: #666;
+        font-size: 12px;
+        margin-top: 15px;
+    }
+
+    .rating {
+        color: #666;
+        margin-top: 10px;
+    }
+</style>
+
+<div class="container">
+    <div class="breadcrumbs">
+        <a href="{% url 'home' %}">Home</a> / <a href="{% url 'profile_management:profile_overview' %}">Account</a> / <a href="{% url 'orders:orders_list' %}">Orders</a> / <a href="#">Orders Items</a>
+    </div>
+
+    <div class="account-name">
+        <h3>ACCOUNT</h3>
+    </div>
+
+    <div class="dashboard">
+        <aside class="sidebar">
+            <nav>
+                <ul class="sidebar-menu">
+                    <li><a href="{% url 'profile_management:profile_overview' %}">Overview</a></li>
+                    <li><a href="#wallet">Wallet</a></li>
+                    <li><a href="{% url 'orders:orders_list' %}">Orders & Returns</a></li>
+                    <li><a href="{% url 'profile_management:address_list' %}">Addresses</a></li>
+                    <li><a href="{% url 'profile_management:profile_details' %}">Profile</a></li>
+                    <li><a href="{% url 'profile_management:edit_profile' %}">Edit Profile</a></li>
+                    <li><a href="#delete-account">Delete Account</a></li>
+                </ul>
+            </nav>
+        </aside>
+        {% for item in order_items %}
+        <!-- <tr>
+            <td>{{ item.product_variant.product.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>₹{{ item.unit_price }}</td>
+            <td>₹{{ item.total_price }}</td>
+        </tr> -->
+        
+
+        <main class="main-content">
+            <div class="order-card">
+                <div class="delivery-info">
+                    <span class="delivery-icon">🚚</span>
+                    {{order.order_status}}
+                    
+                </div>
+
+                <div class="product">
+                    {% if item.product_variant.primary_images %}
+                        <img 
+                            src="{{ item.product_variant.primary_images.0.image.url }}" 
+                            alt="{{ item.product_variant.product.name }}" 
+                            class="product-image">
+                    {% else %}
+                        <img 
+                            src="/placeholder.svg" 
+                            alt="No Image Available" 
+                            class="product-image">
+                    {% endif %}
+                    <div class="product-details">
+                        <h3>{{ item.product_variant.product.name }}</h3>
+                        <div class="product-id">{{ item.quantity }}</div>
+                        <div class="price">₹{{ item.unit_price }}</div>
+                    </div>
+                </div>
+
+                <div class="progress-track">
+                    <div class="progress-line"></div>
+                    <div class="progress-line-filled"></div>
+
+                    <div class="progress-step">
+                        <div class="step-dot"></div>
+                        <div class="step-label">Order placed</div>
+                    </div>
+
+                    <div class="progress-step">
+                        <div class="step-dot"></div>
+                        <div class="step-label">In transit</div>
+                    </div>
+
+                    <div class="progress-step">
+                        <div class="step-dot"></div>
+                        <div class="step-label">Out for delivery</div>
+                    </div>
+
+                    <div class="progress-step">
+                        <div class="step-dot" style="background: #ddd;"></div>
+                        <div class="step-label">Delivered</div>
+                    </div>
+                </div>
+                <div>
+                    <div>Estimated Delivery</div>
+                    <div>on Thu, 4 Oct</div>
+                </div>
+
+                <!-- <div class="order-status">
+                    <small>Order status</small>
+                    <div>AWB no: 326727462983</div>
+                </div> -->
+            </div>
+            {% endfor %}
+            <!-- <div class="order-card">
+                <div class="delivery-info">
+                    <span class="delivery-icon">🚚</span>
+                    <div>
+                        <div>Delivered</div>
+                        <div>on Wed, 1 Oct</div>
+                    </div>
+                </div>
+
+                <div class="product">
+                    <img src="/placeholder.svg?height=80&width=80" alt="Tissot Watch" class="product-image">
+                    <div class="product-details">
+                        <h3>Tissot T120407370100 T-Sport Seastar 1000 Powermatic 80 Men's Watch</h3>
+                        <div class="product-id">T120407370100</div>
+                        <div class="price">₹84,000.00</div>
+                    </div>
+                </div>
+
+                <div class="exchange-info">
+                    Exchange/Return window closed on 17 Oct
+                </div>
+
+                <div class="rating">
+                    ☆ ☆ ☆ ☆ ☆
+                </div>
+            </div> -->
+        </main>
+    </div>
+</div>
+{% endblock %}

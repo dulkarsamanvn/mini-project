@@ -28,7 +28,9 @@
                 </td>
                 <td class="actions">
                     <a href="{% url 'admin_edit_category' category.id %}" class="btn btn-edit">Edit</a>
-                    <a href="{% url 'admin_toggle_category' category.id %}" class="btn btn-toggle">
+                    <a href="{% url 'admin_toggle_category' category.id %}" 
+                        class="btn btn-toggle" 
+                        onclick="return confirm('Are you sure you want to {% if category.is_listed %}unlist{% else %}list{% endif %} this category?');">
                         {% if category.is_listed %} Unlist {% else %} List {% endif %}
                     </a>
                 </td>

@@ -2,6 +2,8 @@
 {% block content %}
 
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- <title>TISSOT T129407220300 Classic Dream Swissmatic Men's Watch</title> -->
@@ -157,12 +159,14 @@
             background-color: grey;
             color: black;
         }
+
         .tab {
             display: none;
-        } 
+        }
+
         .tab.active {
             display: block;
-        } 
+        }
 
         .tab-content {
             padding: 20px 0;
@@ -224,6 +228,7 @@
             margin-top: 10px;
             display: none;
         }
+
         .product-images {
             position: relative;
         }
@@ -242,7 +247,7 @@
             height: 100%;
             display: none;
             border: 1px solid #e0e0e0;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
         }
 
         .zoomed-image {
@@ -255,7 +260,7 @@
 
         .color-circle.active {
             border: 2px solid #000;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
@@ -269,46 +274,73 @@
         <div class="product-grid">
             <div class="product-images">
                 <div class="main-image-container">
-                    <img id="main-image" src="{{ primary_variant_images.0.image.url }}" alt="{{ product.name }}" class="main-image">
+                    <img id="main-image" src="{{ primary_variant_images.0.image.url }}" alt="{{ product.name }}"
+                        class="main-image">
                     <div class="zoomed-image-container">
                         <div class="zoomed-image"></div>
                     </div>
                 </div>
                 <div class="thumbnail-grid">
                     {% for image in primary_variant_images %}
-                    <img src="{{ image.image.url }}" alt="{{ product.name }}" class="thumbnail" onclick="changeMainImage('{{ image.image.url }}')">
+                    <img src="{{ image.image.url }}" alt="{{ product.name }}" class="thumbnail"
+                        onclick="changeMainImage('{{ image.image.url }}')">
                     {% endfor %}
                 </div>
             </div>
 
             <div class="product-info">
                 <h1>{{ product.name }}</h1>
-                <p class="price">₹ {{ primary_variant.price }}</p>
+                <p class="price">
+                    {% if primary_variant.get_discounted_price and primary_variant.get_discounted_price < primary_variant.price %}
+                        <span class="original-price" style="text-decoration: line-through; color: grey;">
+                            ₹ {{ primary_variant.price }}
+                        </span>
+                        <span class="discounted-price" style="color: red; font-weight: bold;">
+                            ₹ {{ primary_variant.get_discounted_price }}
+                        </span>
+                    {% else %}
+                        ₹ {{ primary_variant.price }}
+                    {% endif %}
+                </p>
+                
+                <!-- <p class="price">₹ {{ primary_variant.price }}</p> -->
                 <p>Shipping calculated at checkout.</p>
 
                 <div class="stock-info">
                     {% if quantity > 0 %}
-                        <span class="stock-dot" style="background-color: green;"></span>
-                        <span>{{ status }} - {{ quantity }} item{% if quantity > 1 %}s{% endif %} left</span>
+                    <span class="stock-dot" style="background-color: green;"></span>
+                    <span>{{ status }} - {{ quantity }} item{% if quantity > 1 %}s{% endif %} left</span>
                     {% else %}
-                        <span class="stock-dot" style="background-color: red;"></span>
-                        <span>{{ status }}</span>
+                    <span class="stock-dot" style="background-color: red;"></span>
+                    <span>Out of Stock</span>
                     {% endif %}
                 </div>
-                
+
 
                 <div class="color-options">
                     <p>Dial Colors:</p>
                     {% for color in dial_colors %}
                     <span class="color-circle" style="background-color: {{ color.dial_color }};"
-                        onclick="changeVariant('{{ color.dial_color }}')"></span>
+                        data-dial-color="{{ color.dial_color }}" data-variant-id="{{ color.id }}"
+                        onclick="changeVariant('{{ color.dial_color }}', '{{ color.id }}')"></span>
                     {% endfor %}
                 </div>
 
-                <button class="button button-primary">Add to cart</button>
+                {% if primary_variant_id %}
+                <a class="button button-primary" id="add-to-cart">Add to Cart</a>
+                {% else %}
+                <p>No variant available to add to cart.</p>
+                {% endif %}
+
+
+
+
+
+                <!-- <button  class="button button-primary">Add to cart</button> -->
                 <button class="button button-secondary">Buy now</button>
                 <button class="button button-tertiary">SAVE 5% ON THIS PRODUCT</button>
             </div>
+            
         </div>
 
         <div class="tabs">
@@ -321,12 +353,12 @@
                 <div id="description" class="tab active">
                     <p>{{ description }}</p>
                 </div>
-                
+
                 <!-- Specifications Tab -->
                 <div id="specification" class="tab">
                     <ul>
                         {% for key, value in specifications.items %}
-                            <li><strong>{{ key }}:</strong> {{ value }}</li>
+                        <li><strong>{{ key }}:</strong> {{ value }}</li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -413,90 +445,109 @@
             const mainImage = document.getElementById('main-image');
             mainImage.src = url;
         }
-    
-        // Fetch and update variant details dynamically
-        function changeVariant(dialColor) {
+        function changeVariant(dialColor, variantId) {
             fetch(`?dial_color=${dialColor}`, {
                 headers: {
                     "X-Requested-With": "XMLHttpRequest"
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                // Update price
-                document.querySelector('.price').textContent = `₹ ${data.price}`;
+                .then(response => response.json())
+                .then(data => {
+                    // Update price
+                    // document.querySelector('.price').textContent = `₹ ${data.price}`;
+                    const priceElement = document.querySelector('.price');
+                    if (data.discounted_price && parseFloat(data.discounted_price) < parseFloat(data.price)) {
+                        priceElement.innerHTML = `
+                            <span class="original-price" style="text-decoration: line-through; color: grey;">
+                                ₹ ${data.price}
+                            </span>
+                            <span class="discounted-price" style="color: red; font-weight: bold;">
+                                ₹ ${data.discounted_price}
+                            </span>
+                        `;
+                    } else {
+                        priceElement.textContent = `₹ ${data.price}`;
+                    }
 
-                // Update quantity and status
-                const stockInfo = document.querySelector('.stock-info');
-                if (data.quantity > 0) {
+                    // Update quantity and stock status
+                    const stockInfo = document.querySelector('.stock-info');
+
+                    // Check the quantity and update the stock info
+                    if (data.quantity > 0) {
                     stockInfo.innerHTML = `
                         <span class="stock-dot" style="background-color: green;"></span>
                         <span>${data.status} - ${data.quantity} item${data.quantity > 1 ? 's' : ''} left</span>
                     `;
-                } else {
+                    } else {
                     stockInfo.innerHTML = `
                         <span class="stock-dot" style="background-color: red;"></span>
-                        <span>${data.status}</span>
+                        <span>Out of Stock</span>
                     `;
-                }
+                    }
 
-                // Update main image
-                const mainImage = document.getElementById('main-image');
-                mainImage.src = data.images[0];
+                    // Update main image
+                    const mainImage = document.getElementById('main-image');
+                    mainImage.src = data.images[0];
 
-                // Update thumbnails
-                const thumbnailContainer = document.querySelector('.thumbnail-grid');
-                thumbnailContainer.innerHTML = ''; // Clear existing thumbnails
-                data.images.forEach(url => {
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.alt = "Product Image";
-                    img.className = "thumbnail";
-                    img.onclick = () => changeMainImage(url);
-                    thumbnailContainer.appendChild(img);
-                });
+                    // Update thumbnails
+                    const thumbnailContainer = document.querySelector('.thumbnail-grid');
+                    thumbnailContainer.innerHTML = ''; // Clear existing thumbnails
+                    data.images.forEach(url => {
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.alt = "Product Image";
+                        img.className = "thumbnail";
+                        img.onclick = () => changeMainImage(url);
+                        thumbnailContainer.appendChild(img);
+                    });
 
-                // Update specifications
-                const specificationsContainer = document.getElementById('specification');
-                let specificationsHTML = '<ul>';
-                for (const [key, value] of Object.entries(data.specifications)) {
-                    specificationsHTML += `<li><strong>${key}:</strong> ${value}</li>`;
-                }
-                specificationsHTML += '</ul>';
-                specificationsContainer.innerHTML = specificationsHTML;
-            });
+                    // Update "Add to Cart" link with new variant ID
+                    const addToCartButton = document.getElementById('add-to-cart');
+                    addToCartButton.href = `/cart/add-to-cart/${data.id}/`;
+                    addToCartButton.style.textDecoration = 'none';
+
+                    // Update color circle active state
+                    const colorCircles = document.querySelectorAll('.color-circle');
+                    colorCircles.forEach(circle => {
+                        circle.classList.remove('active');
+                        if (circle.dataset.dialColor === dialColor) {
+                            circle.classList.add('active');
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching variant data:', error));
         }
 
-    
+
         // Image Zoom Functionality
         document.addEventListener('DOMContentLoaded', () => {
             const mainImageContainer = document.querySelector('.main-image-container');
             const mainImage = document.getElementById('main-image');
             const zoomedImageContainer = document.querySelector('.zoomed-image-container');
             const zoomedImage = document.querySelector('.zoomed-image');
-    
+
             mainImageContainer.addEventListener('mouseenter', () => {
                 zoomedImageContainer.style.display = 'block';
             });
-    
+
             mainImageContainer.addEventListener('mousemove', (e) => {
                 const containerRect = mainImageContainer.getBoundingClientRect();
                 const x = e.clientX - containerRect.left;
                 const y = e.clientY - containerRect.top;
-    
+
                 // Calculate percentage positions
                 const xPercent = (x / containerRect.width) * 100;
                 const yPercent = (y / containerRect.height) * 100;
-    
+
                 // Set zoomed image background
                 zoomedImage.style.backgroundImage = `url(${mainImage.src})`;
                 zoomedImage.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
             });
-    
+
             mainImageContainer.addEventListener('mouseleave', () => {
                 zoomedImageContainer.style.display = 'none';
             });
-    
+
             // Color circle selection
             const colorCircles = document.querySelectorAll('.color-circle');
             colorCircles.forEach(circle => {
@@ -505,14 +556,14 @@
                     colorCircles.forEach(c => c.classList.remove('active'));
                     // Add active class to clicked circle
                     circle.classList.add('active');
-    
+
                     // Fetch variant details based on the selected color
                     const dialColor = circle.dataset.dialColor;
                     changeVariant(dialColor);
                 });
             });
         });
-    
+
         // Simple tab functionality
         document.addEventListener('DOMContentLoaded', () => {
             const tabButtons = document.querySelectorAll('.tab-button');
@@ -532,7 +583,7 @@
             });
         });
 
-    
+
         // Simple FAQ functionality
         const faqQuestions = document.querySelectorAll('.faq-question');
         faqQuestions.forEach(question => {
@@ -541,10 +592,24 @@
                 answer.style.display = answer.style.display === 'block' ? 'none' : 'block';
             });
         });
-    
-        // In a real implementation, you would add more JavaScript for dynamic content loading,
-        // form submissions, etc.
+
+
+
+
+
+        {% if messages %}
+       {% for message in messages %}
+       Toastify({
+            text: "{{ message }}",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+       }).showToast();
+       {% endfor %}
+       {% endif %}
     </script>
-    
+
 </body>
 {% endblock %}

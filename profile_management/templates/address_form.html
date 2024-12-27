@@ -1,0 +1,217 @@
+{% extends "userbase.html" %}
+
+{% block content %}
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    .breadcrumbs {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 1rem;
+        padding: 0.5rem 0;
+    }
+    .breadcrumbs a {
+        text-decoration: none;
+        color: #333;
+        transition: color 0.3s ease;
+    }
+    .breadcrumbs a:hover {
+        color: #ff9900;
+    }
+    .breadcrumbs::after {
+        content: "";
+        display: block;
+        height: 1px;
+        background: #e0e0e0;
+        margin-top: 0.5rem;
+    }
+    .account-name {
+        margin-bottom: 20px;
+        margin-left: 5px;
+    }
+    .account-name p {
+        margin-top: 4px;
+    }
+    .dashboard {
+        display: flex;
+        gap: 2rem;
+    }
+    .sidebar {
+        width: 250px;
+        background: #f0f0f0;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+    .sidebar-menu {
+        list-style: none;
+        padding: 0;
+    }
+    .sidebar-menu li {
+        margin-bottom: 1.25rem;
+    }
+    .sidebar-menu a {
+        color: #333;
+        text-decoration: none;
+        font-size: 1.1rem;
+        display: block;
+        padding: 0.5rem 0;
+        transition: color 0.3s ease;
+    }
+    .sidebar-menu a:hover {
+        color: #ff9900;
+    }
+    .main-content {
+        flex: 1;
+    }
+    .card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    h2 {
+        margin-top: 0;
+        text-align: center;
+    }
+    .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    .form-group {
+        flex: 1;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    input[type="text"],
+    input[type="tel"],
+    select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    button {
+        background-color: #000;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 16px;
+    }
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #000;
+        text-decoration: none;
+    }
+</style>
+
+<div class="container">
+    <div class="breadcrumbs">
+        <a href="{% url 'home' %}">Home</a> / <a href="{% url 'profile_management:profile_overview' %}">Account</a> / <a href="{% url 'profile_management:address_list' %}">Addresses</a> 
+    </div>
+    <div class="account-name">
+        <h3>ACCOUNT</h3>
+        <!-- <p>{{user.name}}</p> -->
+    </div>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav>
+                <ul class="sidebar-menu">
+                    <li><a href="{% url 'profile_management:profile_overview' %}">Overview</a></li>
+                    <li><a href="#wallet">Wallet</a></li>
+                    <li><a href="#orders">Orders & Returns</a></li>
+                    <li><a href="{% url 'profile_management:address_list' %}">Addresses</a></li>
+                    <li><a href="{% url 'profile_management:profile_details' %}">Profile</a></li>
+                    <li><a href="{% url 'profile_management:edit_profile' %}">Edit Profile</a></li>
+                    <li><a href="#delete-account">Delete Account</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="card">
+                <h2>{% if form.instance.pk %}Edit Address{% else %}Add Address{% endif %}</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.name.label_tag }}
+                            {{ form.name }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.address_type.label_tag }}
+                            {{ form.address_type }}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.phone.label_tag }}
+                            {{ form.phone }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.alternate_phone.label_tag }}
+                            {{ form.alternate_phone }}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.address_line1.label_tag }}
+                            {{ form.address_line1 }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.address_line2.label_tag }}
+                            {{ form.address_line2 }}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.city.label_tag }}
+                            {{ form.city }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.state.label_tag }}
+                            {{ form.state }}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.postal_code.label_tag }}
+                            {{ form.postal_code }}
+                        </div>
+                        <div class="form-group">
+                            {{ form.country.label_tag }}
+                            {{ form.country }}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.is_default.label_tag }}
+                            {{ form.is_default }}
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <button type="submit">{% if form.instance.pk %}Update{% else %}Add{% endif %}</button>
+                    </div>
+                </form>
+                <a href="{% url 'profile_management:address_list' %}" class="back-link">Back to Address List</a>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

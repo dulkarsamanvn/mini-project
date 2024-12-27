@@ -222,7 +222,10 @@
     </div>
 
     <nav class="navbar">
-        <div class="logo">LUXE TICKERS</div>
+        <a href="{% url 'home' %}" style="text-decoration: none; color: #000;">
+            <div class="logo">LUXE TICKERS</div>
+        </a>
+        
         <ul class="nav-menu">
             <li>
                 Men
@@ -249,17 +252,30 @@
             <div class="icon-wrapper">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </div>
-            <div class="icon-wrapper">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-            </div>
-            <div class="icon-wrapper">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-            </div>
+            <a href="{% url 'wishlist:view_wishlist' %}" style="text-decoration: none; color: inherit;">
+                <div class="icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                </div>
+            </a>
+            
+            <a href="{% url 'cart:cart' %}" style="text-decoration: none; color: inherit;">
+                <div class="icon-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                </div>
+            </a>
             <div class="user-profile icon-wrapper">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 <div class="user-menu">
+                    <a href="{% url 'profile_management:profile_overview' %}" style="text-decoration: none; color:inherit ;">
                     <div>Profile</div>
-                    <div>Orders</div>
+                    </a>
+                    <a href="{% url 'orders:orders_list' %}" style="text-decoration: none; color: inherit;">
+                        <div>Orders</div>
+                        </a>
                     <div>Wishlist</div>
                      <a href="{% url 'logout' %}" style="text-decoration: none; color: inherit;">
                      <div>Logout</div>
@@ -272,33 +288,6 @@
     {% block content %}
     {% endblock %}
 
-    <!-- <section class="brand-section">
-        <img src="/placeholder.svg?height=40&width=120" alt="Tissot" class="brand-logo">
-        <div class="products-grid">
-            <div class="product-card">
-                <img src="/placeholder.svg?height=300&width=300" alt="Tissot Watch">
-                <div class="product-title">TISSOT CARSON PREMIUM CHRONOGRAPH T1224171603300 MEN WATCH</div>
-                <div class="product-price">₹ 45,000.00</div>
-                <div>❤️</div>
-            </div> -->
-            <!-- Repeat product-card div 3 more times with different watches -->
-        <!-- </div>
-        <button class="see-all-btn">SEE ALL</button>
-    </section> -->
-
-    <!-- <section class="brand-section">
-        <img src="/placeholder.svg?height=40&width=120" alt="Rado" class="brand-logo">
-        <div class="products-grid">
-        </div>
-        <button class="see-all-btn">SEE ALL</button>
-    </section>
-
-    <section class="brand-section">
-        <img src="/placeholder.svg?height=40&width=120" alt="Seiko" class="brand-logo">
-        <div class="products-grid">
-        </div>
-        <button class="see-all-btn">SEE ALL</button>
-    </section> -->
 
     <footer class="footer">
         <div class="footer-grid">

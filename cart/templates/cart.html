@@ -1,0 +1,384 @@
+{% extends 'userbase.html' %}
+{% block content %}
+<style>
+    body {
+        background-color: #f4f4f4;
+        font-family: 'Arial', sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+    }
+
+    .cart-container {
+        max-width: 1550px;
+        margin: 2rem auto;
+        display: flex;
+        gap: 2rem;
+    }
+
+    .cart-items {
+        flex: 1;
+        background-color: white;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+    .cart-summary {
+        width: 300px;
+        background-color: white;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        align-self: flex-start;
+        /* position: sticky; */
+        top: 2rem;
+    }
+
+    .cart-title {
+        text-align: center;
+        color: #333;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1rem;
+    }
+
+    .cart-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .cart-table th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        text-align: left;
+        padding: 12px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .cart-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+
+    .cart-table img {
+        max-width: 100px;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .quantity-form {
+        display: flex;
+        align-items: center;
+    }
+
+    .quantity-input {
+        width: 60px;
+        padding: 6px;
+        margin-right: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .update-btn {
+        background-color: grey;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .update-btn:hover {
+        background-color: black;
+    }
+
+    .remove-btn {
+        color: black;
+        font-size: 1.2rem;
+        display: inline-block;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .remove-btn:hover {
+        color: #a71d2a;
+    }
+
+    .cart-total {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #28a745;
+        margin-bottom: 1rem;
+    }
+
+    .empty-cart {
+        text-align: center;
+        color: #6c757d;
+        font-size: 1.2rem;
+        margin-top: 2rem;
+    }
+
+    .checkout-button {
+        width: 100%;
+        padding: 15px;
+        background: #000;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+    }
+
+    .quantity-btn {
+        background-color: #e9ecef;
+        border: none;
+        padding: 8px 12px;
+        font-size: 1rem;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+    .quantity-btn:hover {
+        background-color: #dee2e6;
+    }
+
+    .quantity-input {
+        width: 60px;
+        text-align: center;
+        border: 1px solid #ced4da;
+        margin: 0 8px;
+        padding: 6px;
+        border-radius: 4px;
+    }
+
+    .loading {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .coupon-section {
+        margin-top: 1rem;
+        border-top: 1px solid #e9ecef;
+        padding-top: 1rem;
+    }
+
+    .coupon-input-container {
+        display: flex;
+        margin-bottom: 0.5rem;
+    }
+
+    .coupon-input {
+        flex-grow: 1;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px 0 0 4px;
+    }
+
+    .apply-coupon-btn {
+        padding: 10px 15px;
+        background-color: #000;
+        color: white;
+        border: none;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .apply-coupon-btn:hover {
+        background-color: #333;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<div class="cart-container">
+    <div class="cart-items">
+        <h1 class="cart-title">MY CART</h1>
+        {% if cart_items %}
+        <table class="cart-table">
+            <tbody>
+                {% for item in cart_items %}
+                <tr id="cart-item-{{ item.id }}">
+                    <td data-label="Image">
+                        {% if item.product_variant.images.first %}
+                            <img src="{{ item.product_variant.images.first.image.url }}" alt="Product Image">
+                        {% else %}
+                            No Image
+                        {% endif %}
+                    </td>
+                    <td data-label="Product">{{ item.product_variant.product.name }}</td>
+                    <td data-label="Price">
+                        {% if item.product_variant.get_discounted_price %}
+                            ₹{{ item.product_variant.get_discounted_price }}
+                        {% else %}
+                            ₹{{ item.product_variant.price }}
+                        {% endif %}
+                    </td>
+                    <td data-label="Quantity">
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="updateQuantity('{{ item.id }}', -1)">-</button>
+                            <input type="number" class="quantity-input" id="quantity-{{ item.id }}" 
+                                   value="{{ item.quantity }}" readonly>
+                            <button class="quantity-btn" onclick="updateQuantity('{{ item.id }}', 1)">+</button>
+                        </div>
+                        <span class="loading" id="loading-{{ item.id }}" style="display: none;">...</span>
+                    </td>
+                    <td data-label="Total" id="total-{{ item.id }}">
+                        ₹{{ item.total_amount }}
+                    </td>
+                    <td data-label="Actions">
+                        <a href="{% url 'cart:remove_cart_item' item.id %}" class="remove-btn">
+                            <i class="fa fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="empty-cart">Your cart is empty</p>
+        {% endif %}
+    </div>
+    <div class="cart-summary">
+        <h2>Summary</h2>
+        <div class="coupon-section">
+            <h3>Apply Coupon</h3>
+            <div class="coupon-input-container">
+                <input type="text" id="coupon-code" class="coupon-input" placeholder="Enter coupon code">
+                <button class="apply-coupon-btn" onclick="applyCoupon()">Apply</button>
+            </div>
+            <p id="coupon-message" class="coupon-message"></p>
+        </div>
+        <div class="cart-total" id="cart-total" style="color: #a71d2a;">
+            {% if discounted_total_amount %}
+            Total Amount: ₹{{ discounted_total_amount }}
+            {% else %}
+            Total Amount: ₹{{ total_amount }}
+            {% endif %}
+        </div>
+        <button onclick="window.location.href='{% url 'orders:checkout' %}'" class="checkout-button">Proceed To Checkout</button>
+    </div>
+</div>
+
+
+<script>
+    function updateQuantity(cartItemId, change) {
+        const quantityInput = document.getElementById(`quantity-${cartItemId}`);
+        const originalQuantity = parseInt(quantityInput.value);
+        const newQuantity = parseInt(quantityInput.value) + change;
+        const loadingElement = document.getElementById(`loading-${cartItemId}`);
+        const totalElement = document.getElementById(`total-${cartItemId}`);
+        const cartTotalElement = document.getElementById('cart-total');
+
+        if (newQuantity < 1) {
+            Toastify({
+                text: "Quantity must be at least 1.",
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "center",
+                backgroundColor: "red",
+            }).showToast();
+            return;
+        }
+
+        if (newQuantity > 5) {
+            Toastify({
+                text: "Quantity cannot exceed 5.",
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "center",
+                backgroundColor: "red",
+            }).showToast();
+            return;
+        }
+
+        // Update the quantity visually
+        quantityInput.value = newQuantity;
+
+        // Show loading indicator
+        loadingElement.style.display = 'inline';
+
+        // Prepare the data to send
+        const data = {
+            cart_item_id: cartItemId,
+            quantity: newQuantity
+        };
+
+        // Send the request to the server using fetch
+        fetch("{% url 'cart:update_cart_item' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update quantity. Please try again.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            // Update the item's total price
+            totalElement.innerText = `₹${data.discounted_item_total || data.item_total}`;
+
+            // Update the cart's total price
+            cartTotalElement.innerText = `Total Amount: ₹${data.discounted_cart_total || data.cart_total}`;
+        })
+        .catch(error => {
+            console.error('Error updating cart item:', error);
+            Toastify({
+                text: error.message || "Failed to update the cart. Please try again.",
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "center",
+                backgroundColor: "red",
+            }).showToast();
+            quantityInput.value = originalQuantity;
+        })
+        .finally(() => {
+            // Hide loading indicator
+            loadingElement.style.display = 'none';
+        });
+    }
+
+    {% if messages %}
+       {% for message in messages %}
+       Toastify({
+            text: "{{ message }}",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+       }).showToast();
+       {% endfor %}
+    {% endif %}
+</script>
+
+
+<!-- Font Awesome CDN -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+{% endblock %}
+

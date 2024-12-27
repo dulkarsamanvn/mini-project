@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <h1>Edit Product: {{ product.name }}</h1>
 
 <form method="POST" id="editProductForm">
@@ -142,31 +144,44 @@ textarea {
 
 </style>
 <script>
-    document.getElementById('editProductForm').addEventListener('submit', function (event) {
-        const requiredFields = document.querySelectorAll('#editProductForm [required]');
-        let isValid = true;
+    // document.getElementById('editProductForm').addEventListener('submit', function (event) {
+    //     const requiredFields = document.querySelectorAll('#editProductForm [required]');
+    //     let isValid = true;
 
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                isValid = false;
-                field.style.borderColor = 'red';
-            } else {
-                field.style.borderColor = '#ddd';
-            }
-        });
+    //     requiredFields.forEach(field => {
+    //         if (!field.value.trim()) {
+    //             isValid = false;
+    //             field.style.borderColor = 'red';
+    //         } else {
+    //             field.style.borderColor = '#ddd';
+    //         }
+    //     });
 
-        if (!isValid) {
-            event.preventDefault();
-            alert('Please fill in all required fields.');
-        }
-    });
+    //     if (!isValid) {
+    //         event.preventDefault();
+    //         alert('Please fill in all required fields.');
+    //     }
+    // });
 
-    // Add placeholder effects
-    const fields = document.querySelectorAll('#editProductForm input, #editProductForm textarea, #editProductForm select');
-    fields.forEach(field => {
-        field.addEventListener('focus', () => field.style.borderColor = '#007bff');
-        field.addEventListener('blur', () => field.style.borderColor = '#ddd');
-    });
+    // // Add placeholder effects
+    // const fields = document.querySelectorAll('#editProductForm input, #editProductForm textarea, #editProductForm select');
+    // fields.forEach(field => {
+    //     field.addEventListener('focus', () => field.style.borderColor = '#007bff');
+    //     field.addEventListener('blur', () => field.style.borderColor = '#ddd');
+    // });
+
+        {% if messages %}
+        {% for message in messages %}
+        Toastify({
+             text: "{{ message }}",
+             duration: 3000,
+             close: true,
+             gravity: "top",
+             position: "center",
+             backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+        }).showToast();
+        {% endfor %}
+        {% endif %}
 </script>
 
 {% endblock  %}

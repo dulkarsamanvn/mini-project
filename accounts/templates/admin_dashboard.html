@@ -245,7 +245,12 @@
                             {% if user.is_active %}
                                 <form method="post" action="{% url 'block_user' user.id %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-block">Block</button>
+                                    <!-- <button type="submit" class="btn btn-block">Block</button> -->
+                                    <a href="{% url 'block_user' user.id %}" 
+                                    class="btn btn-block" 
+                                    onclick="return confirm('Are you sure you want to block {{ user.username }}?');">
+                                    Block
+                                 </a>
                                 </form>
                             {% else %}
                                 <form method="post" action="{% url 'unblock_user' user.id %}">
