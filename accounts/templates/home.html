@@ -558,7 +558,8 @@
 
 
 // --------------------------------------------------------------------------------
-//   function applySorting() {
+
+// function applySorting() {
 //     const sortBy = document.querySelector('select[name="sort_by"]').value;
 //     console.log("Sorting by:", sortBy); // Debugging log to check selected value
 
@@ -576,8 +577,8 @@
 //     fetch(url, {
 //         method: 'GET',
 //         headers: {
-//         'X-Requested-With': 'XMLHttpRequest'  // Add this header for AJAX requests
-//     }
+//             'X-Requested-With': 'XMLHttpRequest'  // Add this header for AJAX requests
+//         }
 //     })
 //     .then(response => {
 //         console.log("Response Status:", response.status); // Check response status
@@ -594,16 +595,30 @@
 //         productsContainer.innerHTML = '';
 //         productsContainer.innerHTML = data.products.map(product => {
 //             const imageUrl = product.primary_image_url || 'path/to/default-image.jpg';  // Fallback image
+//             const wishlistIconClass = product.in_wishlist ? 'fas' : 'far';  // Icon class based on wishlist state
+
 //             return `
 //                 <div class="product-card">
-//                     <a href="/product/${product.id}">
+//                     ${product.offer_discount > 0 ? `<p class="offer_discount">${product.offer_discount}% off</p>` : ''}
+//                     <a style="text-decoration: none;"  href="/product/${product.id}">
 //                         <img src="${imageUrl}" alt="${product.name}" class="product-image">
 //                         <h3>${product.name}</h3>
-//                         <p class="price">₹ ${product.price}</p>
+//                         <p class="price">
+//                             ${product.discounted_price && product.discounted_price < product.price 
+//                                 ? `<span class="original-price" style="text-decoration: line-through; color: grey;">₹ ${product.price}</span>
+//                                    <span class="discounted-price" style="color: red; font-weight: bold;">₹ ${product.discounted_price}</span>`
+//                                 : `₹ ${product.price}`}
+//                         </p>
 //                     </a>
 //                     <div class="dial-colors">
 //                         ${product.dial_colors.map(color => `<span class="color-circle" style="background-color: ${color};"></span>`).join('')}
 //                     </div>
+//                     <button 
+//                         class="btn add-to-wishlist" 
+//                         data-product-id="${product.id}" 
+//                         style="background: transparent; border: none; cursor: pointer;">
+//                         <i class="${wishlistIconClass} fa-heart" style="font-size: 20px;"></i>
+//                     </button>
 //                 </div>
 //             `;
 //         }).join('');
@@ -613,52 +628,62 @@
 //         alert("Something went wrong while fetching products. Please try again.");
 //     });
 // }
+
 function applySorting() {
     const sortBy = document.querySelector('select[name="sort_by"]').value;
-    console.log("Sorting by:", sortBy); // Debugging log to check selected value
 
-    // Create the query string for the URL
-    const params = new URLSearchParams();
-    if (sortBy) params.set('sort_by', sortBy);
-
-    // Get the current URL and update it with the sort parameter
+    // Get the current URL and its query parameters
     const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+
+    // Update the 'sort_by' parameter
+    if (sortBy) {
+        params.set('sort_by', sortBy);
+    } else {
+        params.delete('sort_by'); // Remove the parameter if empty
+    }
+
+    // Update the URL with the new query string
     url.search = params.toString();
 
-    console.log("Request URL:", url); // Debugging log to check URL
-
-    // Send the request to get the sorted products
+    // Send an AJAX request to fetch the sorted data
     fetch(url, {
         method: 'GET',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'  // Add this header for AJAX requests
-        }
+            'X-Requested-With': 'XMLHttpRequest', // Mark the request as AJAX
+        },
     })
     .then(response => {
-        console.log("Response Status:", response.status); // Check response status
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
         return response.json();
     })
     .then(data => {
-        console.log("Response Data:", data); // Debugging log to check the response data
-
-        // Update the product list with the sorted products
         const productsContainer = document.querySelector('.products-grid');
+
+        // Check if the products container exists
+        if (!productsContainer) {
+            console.error("Products container not found");
+            return;
+        }
+
+        // Clear the current product list
         productsContainer.innerHTML = '';
+
+        // Populate the container with the sorted products
         productsContainer.innerHTML = data.products.map(product => {
-            const imageUrl = product.primary_image_url || 'path/to/default-image.jpg';  // Fallback image
-            const wishlistIconClass = product.in_wishlist ? 'fas' : 'far';  // Icon class based on wishlist state
+            const imageUrl = product.primary_image_url || '/static/images/default-image.jpg'; // Default image
+            const wishlistIconClass = product.in_wishlist ? 'fas' : 'far'; // Icon class
 
             return `
                 <div class="product-card">
                     ${product.offer_discount > 0 ? `<p class="offer_discount">${product.offer_discount}% off</p>` : ''}
-                    <a style="text-decoration: none;"  href="/product/${product.id}">
+                    <a href="/product/${product.id}" style="text-decoration: none;">
                         <img src="${imageUrl}" alt="${product.name}" class="product-image">
                         <h3>${product.name}</h3>
                         <p class="price">
-                            ${product.discounted_price && product.discounted_price < product.price 
+                            ${product.discounted_price && product.discounted_price < product.price
                                 ? `<span class="original-price" style="text-decoration: line-through; color: grey;">₹ ${product.price}</span>
                                    <span class="discounted-price" style="color: red; font-weight: bold;">₹ ${product.discounted_price}</span>`
                                 : `₹ ${product.price}`}
@@ -678,10 +703,11 @@ function applySorting() {
         }).join('');
     })
     .catch(error => {
-        console.error("Error fetching data:", error); // Log any errors
+        console.error("Error fetching data:", error);
         alert("Something went wrong while fetching products. Please try again.");
     });
 }
+
 
 
 

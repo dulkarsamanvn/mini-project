@@ -64,6 +64,29 @@
             font-style: italic;
             color: #777;
         }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .step-links a {
+            margin: 0 5px;
+            padding: 8px 12px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .step-links a:hover {
+            background-color: #2980b9;
+        }
+        .step-links .current {
+            margin: 0 5px;
+            padding: 8px 12px;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            border-radius: 4px;
+            font-weight: bold;
+        }
 
         @media (max-width: 768px) {
             table, thead, tbody, th, td, tr {
@@ -128,7 +151,11 @@
                             {% for status, label in order.ORDER_STATUS_CHOICES %}
                             <option value="{{ status }}" 
                                     {% if status == order.order_status %}selected{% endif %}
-                                    {% if order.order_status == 'CANCELED' and status != 'CANCELED' %}disabled{% endif %}>
+                                    {% if order.order_status == 'CANCELED' and status != 'CANCELED' %}disabled{% endif %}
+                                    {% if order.order_status == 'DELIVERED' and status != 'DELIVERED' %}disabled{% endif %}
+                                    {% if order.order_status == 'RETURNED' and status != 'RETURNED' %}disabled{% endif %}
+                                    {% if order.order_status == 'RETURN_PENDING' and status != 'RETURN_PENDING' %}disabled{% endif %}
+                                    {% if order.order_status == 'PAYMENT_PENDING' and status != 'PAYMENT_PENDING' %}disabled{% endif %}>
                                 {{ label }}
                             </option>
                             {% endfor %}
@@ -145,6 +172,24 @@
         </tbody>
         </tbody>
     </table>
+    <div class="pagination">
+        <span class="step-links">
+            {% if orders.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ orders.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ orders.number }} of {{ orders.paginator.num_pages }}.
+            </span>
+
+            {% if orders.has_next %}
+                <a href="?page={{ orders.next_page_number }}">next</a>
+                <a href="?page={{ orders.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+
     <script>
         {% if messages %}
            {% for message in messages %}

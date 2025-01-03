@@ -90,6 +90,7 @@
         <div class="buttons">
             <a href="{% url 'orders:orders_list' %}" class="button">View Orders</a>
             <a href="{% url 'home' %}" class="button">Continue Shopping</a>
+            <a href="{% url 'orders:generate_invoice' order.id %}" class="button">Download Invoice</a>
         </div>
     </div>
 </body>

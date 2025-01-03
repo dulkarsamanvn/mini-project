@@ -95,15 +95,23 @@
 <body>
     <div class="sidebar">
         <div class="logo">LUXE TICKERS</div>
-        <div class="nav-item"><a href="">Dashboard</a></div>
+        <div class="nav-item"><a href="{% url 'dashboard:sales_report' %}">Dashboard</a></div>
         <div class="nav-item"><a href="{% url 'orders:admin_order_list' %}">Orders</a></div>
+        <div class="nav-item"><a href="{% url 'orders:manage_returns' %}">Returns</a></div>
+
+        <!-- <div class="nav-item dropdown">
+            <a href="{% url 'orders:admin_order_list' %}" class="dropdown-toggle" onclick="toggleDropdown()">Orders</a>
+            <div class="dropdown-menu" id="returnsDropdown" style="display: none;">
+                <a href="{% url 'orders:manage_returns' %}">Manage Returns</a>
+            </div>
+        </div>         -->
         <div class="nav-item"><a href="{% url 'product:product_list' %}">Products</a></div>
-        <div class="nav-item active"><a href="{% url 'admin_dashboard' %}">Users</a></div>
+        <div class="nav-item"><a href="{% url 'admin_dashboard' %}">Users</a></div>
         <div class="nav-item"><a href="{% url 'admin_category_list' %}">Categories</a></div>
         <div class="nav-item"><a href="{% url 'admin_brand_list' %}">Brands</a></div>
         <div class="nav-item"><a href="{% url 'offer_management:coupon_list' %}">Coupons</a></div>
-        <div class="nav-item"><a href="">Banners</a></div>
-        <div class="nav-item"><a href="">Payments</a></div>
+        <!-- <div class="nav-item"><a href="">Banners</a></div>
+        <div class="nav-item"><a href="">Payments</a></div> -->
         <div class="nav-item"><a href="{% url 'offer_management:offer_list' %}">Offers</a></div>
         <a href="{% url 'adminlogout' %}" class="btn-logout">Logout</a>
     </div>

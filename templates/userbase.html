@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -105,7 +106,7 @@
             padding: 10px;
             display: none;
             min-width: 120px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .user-profile:hover .user-menu {
@@ -214,8 +215,50 @@
             gap: 20px;
             margin-top: 20px;
         }
+
+        /* Search Bar Container */
+        /* Ensure the search bar fits nicely in the navigation */
+        #search-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        #search-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 70px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        #search-input:focus {
+            border-color: #000;
+        }
+
+        #clear-search {
+            display: none;
+            /* Initially hidden */
+            padding: 8px 12px;
+            background-color: #f44336;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+        }
+
+        #clear-search:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
+
 <body>
     <div class="top-banner">
         AUTHORIZED BRAND STORE for 40+ Brands
@@ -225,23 +268,23 @@
         <a href="{% url 'home' %}" style="text-decoration: none; color: #000;">
             <div class="logo">LUXE TICKERS</div>
         </a>
-        
+
         <ul class="nav-menu">
             <li>
                 Men
-                <div class="dropdown">
+                <!-- <div class="dropdown">
                     <div>Chronograph</div>
                     <div>Automatic</div>
                     <div>Digital</div>
-                </div>
+                </div> -->
             </li>
             <li>
                 Women
-                <div class="dropdown">
+                <!-- <div class="dropdown">
                     <div>Luxury</div>
                     <div>Fashion</div>
                     <div>Smart</div>
-                </div>
+                </div> -->
             </li>
             <li>Offers</li>
             <li>Brands</li>
@@ -249,18 +292,40 @@
             <li>Stores</li>
         </ul>
         <div class="nav-icons">
-            <div class="icon-wrapper">
+            <!-- <div class="icon-wrapper">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div> -->
+            <div style="flex-grow: 1; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+                <form method="GET" action="{% url 'home' %}" id="search-form"
+                    style="display: flex; align-items: center; gap: 10px; width: 100%; max-width: 400px;">
+                    <input type="text" id="search-input" name="q" placeholder="Search"
+                        value="{{ request.GET.q|default_if_none:'' }}"
+                        style="flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 70px; font-size: 14px;" 
+                        />
+                    <button type="button" id="clear-search"
+                        style=" position:absolute; margin-left: 145px; display: none; padding: 8px 12px; background-color: #f5f5f5; font-weight: bolder; color: black; border: none; border-radius: 70px; cursor: pointer; font-size: 14px;">
+                        ✕
+                    </button>
+                </form>
             </div>
+
+            <!-- --------------------------------------------------------------------------------             -->
+
             <a href="{% url 'wishlist:view_wishlist' %}" style="text-decoration: none; color: inherit;">
                 <div class="icon-wrapper">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                        </path>
+                    </svg>
                 </div>
             </a>
-            
+
             <a href="{% url 'cart:cart' %}" style="text-decoration: none; color: inherit;">
                 <div class="icon-wrapper">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="9" cy="21" r="1"></circle>
                         <circle cx="20" cy="21" r="1"></circle>
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
@@ -268,18 +333,23 @@
                 </div>
             </a>
             <div class="user-profile icon-wrapper">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
                 <div class="user-menu">
-                    <a href="{% url 'profile_management:profile_overview' %}" style="text-decoration: none; color:inherit ;">
-                    <div>Profile</div>
+                    <a href="{% url 'profile_management:profile_overview' %}"
+                        style="text-decoration: none; color:inherit ;">
+                        <div>Profile</div>
                     </a>
                     <a href="{% url 'orders:orders_list' %}" style="text-decoration: none; color: inherit;">
                         <div>Orders</div>
-                        </a>
+                    </a>
                     <div>Wishlist</div>
-                     <a href="{% url 'logout' %}" style="text-decoration: none; color: inherit;">
-                     <div>Logout</div>
-                     </a>
+                    <a href="{% url 'logout' %}" style="text-decoration: none; color: inherit;">
+                        <div>Logout</div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -326,5 +396,47 @@
             © 2024 LUXE TICKERS
         </div>
     </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById("search-input");
+            const clearSearch = document.getElementById("clear-search");
+
+            // Show or hide the clear button based on input value
+            function toggleClearButton() {
+                if (searchInput.value.trim() !== "") {
+                    clearSearch.style.display = "block"; // Show the ✕ button
+                } else {
+                    clearSearch.style.display = "none"; // Hide the ✕ button
+                }
+            }
+
+            // Initialize the visibility of the clear button
+            toggleClearButton();
+
+            // Add an input event listener to toggle the ✕ button
+            searchInput.addEventListener("input", toggleClearButton);
+
+            // Add an event listener for 'Enter' key to trigger form submission
+            searchInput.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault(); // Prevent default action
+                    document.getElementById("search-form").submit(); // Trigger search
+                }
+            });
+
+            // Clear the search input when the ✕ button is clicked
+            clearSearch.addEventListener("click", function () {
+                searchInput.value = "";
+                toggleClearButton(); // Update button visibility
+                document.getElementById("search-form").submit(); // Submit form to show all products
+            });
+        });
+
+
+    </script>
+
+
 </body>
+
 </html>

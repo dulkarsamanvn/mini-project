@@ -189,6 +189,7 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  float: right;
 }
 
 .available-coupons {
@@ -252,48 +253,30 @@
                 <!-- ------modal---------- -->
                 <div class="modal" id="address-modal" style="display: none;">
                     <div class="modal-content">
-                      <h2>Add New Address</h2>
-                      <form id="address-form">
-                        {% csrf_token %}
-                        <label for="name">Name:</label>
-                        <input type="text" id="name" name="name" required>
-                  
-                        <label for="address_type">Address Type:</label>
-                        <select id="address_type" name="address_type" required>
-                            <option value="Home">Home</option>
-                            <option value="Work">Work</option>
-                            <option value="Other">Other</option>
-                        </select>
-                  
-                        <label for="phone">Phone:</label>
-                        <input type="tel" id="phone" name="phone" required>
-                  
-                        <label for="alternate_phone">Alternate Phone:</label>
-                        <input type="tel" id="alternate_phone" name="alternate_phone">
-                  
-                        <label for="address_line1">Address Line 1:</label>
-                        <input type="text" id="address_line1" name="address_line1" required>
-                  
-                        <label for="address_line2">Address Line 2:</label>
-                        <input type="text" id="address_line2" name="address_line2">
-                  
-                        <label for="city">City:</label>
-                        <input type="text" id="city" name="city" required>
-                  
-                        <label for="state">State:</label>
-                        <input type="text" id="state" name="state" required>
-                  
-                        <label for="postal_code">Postal Code:</label>
-                        <input type="text" id="postal_code" name="postal_code" required>
-                  
-                        <label for="country">Country:</label>
-                        <input type="text" id="country" name="country" required>
-                        <input type="hidden" name="next" value="{{ request.path }}">
-                        <button  type="submit">Save Address</button>
-                      </form>
-                      <button class="close-modal">Close</button>
+                        <button class="close-modal" onclick="closeModal()">&times;</button>
+                        <h2>Add New Address</h2>
+                        <form id="address-form">
+                            {% csrf_token %}
+                            <input type="text" id="name" name="name" placeholder="Name" required>
+                            <select id="address_type" name="address_type" required>
+                                <option value="">Select Address Type</option>
+                                <option value="Home">Home</option>
+                                <option value="Work">Work</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <input type="tel" id="phone" name="phone" placeholder="Phone" required>
+                            <input type="tel" id="alternate_phone" name="alternate_phone" placeholder="Alternate Phone">
+                            <input type="text" id="address_line1" name="address_line1" placeholder="Address Line 1" required>
+                            <input type="text" id="address_line2" name="address_line2" placeholder="Address Line 2">
+                            <input type="text" id="city" name="city" placeholder="City" required>
+                            <input type="text" id="state" name="state" placeholder="State" required>
+                            <input type="text" id="postal_code" name="postal_code" placeholder="Postal Code" required>
+                            <input type="text" id="country" name="country" placeholder="Country" required>
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit">Save Address</button>
+                        </form>
                     </div>
-                  </div>
+                </div>
                 <!-- ------modal---------- -->
                 <div>
                     <a href="#" class="delivery-instructions">Add Delivery Instructions</a>
@@ -304,29 +287,8 @@
                 <h2>2. Select a payment method</h2>
                 <div class="payment-section">
                     <div class="payment-method">
-                        <input type="radio" name="payment" id="card">
-                        <label for="card">Credit or debit card</label>
-                       
-                    </div>
-                    <span class="payment-icons">
-                        <img src="https://media.licdn.com/dms/image/v2/D4D12AQFAfaYxFXD-6g/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1699642441151?e=2147483647&v=beta&t=ifgubpClH8kWjgGvN8y_ZyWpkvpRGBGxVpkrZXi8pXE" alt="Visa">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/MasterCard_Logo.svg/2560px-MasterCard_Logo.svg.png" alt="Mastercard">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/2560px-PayPal.svg.png" alt="PayPal">
-                    </span>
-
-                    <div class="payment-method">
-                        <input type="radio" name="payment" id="netbanking">
-                        <label for="netbanking">Net banking</label>
-                        <div class="payment-icons">
-                            <select>
-                                <option>Choose an option</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="payment-method">
-                        <input type="radio" name="payment" id="upi">
-                        <label for="upi">Other UPI Apps</label>
+                        <input type="radio" name="payment" id="wallet" value="wallet">
+                        <label for="wallet">Pay via Wallet (Balance: ₹{{ request.user.wallet.balance }})</label>
                     </div>
 
                     <div class="payment-method">
@@ -353,7 +315,7 @@
                     <button type="submit" class="apply-btn">Apply</button>
                 </form>
                 <!-- Feedback message -->
-                <div id="coupon-feedback" style="color: red; margin-top: 10px;"></div>
+                <div id="coupon-feedback" style="color: red; margin-bottom: 25px;"></div>
             </div>
             
 
@@ -368,8 +330,8 @@
                 </div>
                 <div class="summary-row">
                     <span>Promotion Applied</span>
-                    <span>-</span>
-                </div>
+                    <span id="promotion-discount">- ₹0.00</span>
+                </div>                
                 <div class="summary-row total-row">
                     <span>Total</span>
                     <span>₹{{ cart_total|floatformat:2 }}</span>
@@ -387,7 +349,7 @@
             </form>
         </div>
          <!-- --------------------------------------------------------------------------------------- -->
-         <div class="available-coupons" style="width: 400px; position: relative; left: 810px; bottom: 254px;">
+         <div class="available-coupons" style="width: 400px; position: relative; left: 810px; bottom: 90px;">
             <h3>Available Coupons</h3>
             {% if coupons %}
                 <ul class="coupon-list">
@@ -428,7 +390,7 @@ document.getElementById('apply-coupon-form').addEventListener('submit', async fu
         
         if (response.ok) {
             // Update the order summary with the new discount and total amount
-            document.getElementById('coupon-feedback').innerText = 'Coupon applied successfully! Discount: ₹' + data.discount;
+            document.getElementById('coupon-feedback').innerText = 'Coupon applied! ';
             updateOrderSummary(data.discount, data.new_total);
         } else {
             document.getElementById('coupon-feedback').innerText = 'Invalid coupon code!';
@@ -439,12 +401,13 @@ document.getElementById('apply-coupon-form').addEventListener('submit', async fu
     }
 });
 
+
 function updateOrderSummary(discount, newTotal) {
     discount = parseFloat(discount);
     newTotal = parseFloat(newTotal);
 
     // Update total amount
-    const totalSpan = document.querySelector('.total-row span:last-child'); // Adjusted selector
+    const totalSpan = document.querySelector('.total-row span:last-child');
     if (totalSpan) {
         totalSpan.innerText = '₹' + newTotal.toFixed(2);
     } else {
@@ -452,13 +415,14 @@ function updateOrderSummary(discount, newTotal) {
     }
 
     // Update discount amount
-    const discountSpan = document.querySelector('.summary-row span:last-child'); // Adjusted selector
+    const discountSpan = document.getElementById('promotion-discount'); // Updated selector
     if (discountSpan) {
         discountSpan.innerText = '- ₹' + discount.toFixed(2);
     } else {
-        console.error("Discount span not found in the DOM.");
+        console.error("Promotion discount span not found in the DOM.");
     }
 }
+
 
 
 

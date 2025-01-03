@@ -6,6 +6,8 @@ from category.models import Category
 from product.models import Product
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
+from django.core import serializers
+
 
 
 # Create your views here.
@@ -26,6 +28,7 @@ def add_coupon(request):
                 valid_until=valid_until,
                 is_active=is_active
             )
+            messages.success(request,"coupon added successfully")
             print("Coupon successfully saved!")
             return redirect('offer_management:coupon_list')
     return render(request,'add_coupon.html')
@@ -40,6 +43,7 @@ def edit_coupon(request,pk):
         coupon.valid_until = request.POST.get('valid_until')
         coupon.is_active = request.POST.get('is_active') == 'on'
         coupon.save()
+        messages.success(request,"coupon updated successfully")
         return redirect('offer_management:coupon_list')
     return render(request,'edit_coupon.html',{'coupon':coupon})
 
@@ -49,6 +53,7 @@ def remove_coupon(request,pk):
     coupon=get_object_or_404(Coupon,pk=pk)
     if request.method=='POST':
         coupon.delete()
+        messages.success(request,"coupon deleted successfully")
         return redirect('offer_management:coupon_list')
     
 @staff_member_required
@@ -67,11 +72,10 @@ def offer_list(request):
 
 
 
-from django.core import serializers
 @staff_member_required
 def add_offer(request):
     categories = Category.objects.all()
-    products = Product.objects.all()  # Get all products
+    products = Product.objects.all() 
 
     # Serialize the data
     serialized_categories = serializers.serialize('json', categories)
@@ -100,7 +104,7 @@ def add_offer(request):
         if offer_type == "category":
             offer.category_id = selected_id
         elif offer_type == "product":
-            offer.product_id = selected_id  # Assign offer to product, not variant
+            offer.product_id = selected_id 
 
         offer.save()
         messages.success(request, "Offer added successfully")
@@ -111,13 +115,7 @@ def add_offer(request):
         "products": serialized_products
     })
 
-from django.core import serializers
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from .models import Offer
-from category.models import Category
-from product.models import Product
-from django.contrib.admin.views.decorators import staff_member_required
+
 
 @staff_member_required
 def edit_offer(request, pk):
@@ -151,10 +149,10 @@ def edit_offer(request, pk):
 
         if offer_type == "category":
             offer.category_id = selected_id
-            offer.product = None  # Remove product if category is selected
+            offer.product = None  
         elif offer_type == "product":
-            offer.product_id = selected_id  # Assign offer to product
-            offer.category = None  # Remove category if product is selected
+            offer.product_id = selected_id  
+            offer.category = None  
 
         offer.save()
         messages.success(request, "Offer updated successfully")
@@ -173,7 +171,7 @@ def delete_offer(request, pk):
     offer = get_object_or_404(Offer, pk=pk)
     if request.method == 'POST':
         offer.delete()
-        # messages.success(request, "Offer deleted successfully.")
+        messages.success(request, "Offer deleted successfully.")
         return redirect('offer_management:offer_list')
 
 

@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Wallet,Transaction
 from django.contrib import messages
+from decimal import Decimal
 # Create your views here.
 
 @login_required
@@ -18,22 +19,21 @@ def transaction_history(request):
     transactions = wallet.transactions.all().order_by('-created_at')
     return render(request,'transaction_history.html',{'transactions':transactions})
 
-from decimal import Decimal
+
 
 @login_required
 def add_to_wallet(request):
     if request.method == 'POST':
         try:
-            # Get the amount from the form and convert it to Decimal
             amount = Decimal(request.POST.get('amount', 0))
             print(f"Amount received: {amount}")
 
-            # Check if the amount is valid
+            
             if amount <= 0:
                 messages.error(request, "Amount must be greater than 0.")
                 return redirect('wallet:wallet_detail')
 
-            # Retrieve or create the wallet
+            
             wallet, created = Wallet.objects.get_or_create(user=request.user)
             print(f"Wallet: {wallet}, Created: {created}")
             print(f"User: {request.user}, Email: {request.user.email}")

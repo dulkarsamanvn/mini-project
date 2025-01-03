@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'wishlist',
     'offer_management',
     'wallet',
+    'dashboard',
     'social_django',
 ]
 

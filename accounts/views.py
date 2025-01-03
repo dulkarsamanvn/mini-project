@@ -10,13 +10,17 @@ from django.core.mail import send_mail
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
-from django.shortcuts import redirect, render
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control,never_cache
 from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.cache import cache_control
+from django.db.models import Q
+from datetime import date
+from django.http import JsonResponse
+from offer_management.models import Offer
+from decimal import Decimal
 
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -283,15 +287,7 @@ from wishlist.models import Wishlist
 #     }
 #     return render(request, "home.html", context)
 
-from django.db.models import Q
-from datetime import date
-from django.http import JsonResponse
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from category.models import Category
-from product.models import Product, ProductVariant
-from offer_management.models import Offer
-from decimal import Decimal
+
 
 @login_required
 def home_view(request):
@@ -301,9 +297,16 @@ def home_view(request):
 
     # Get the sort_by query parameter
     sort_by = request.GET.get('sort_by')
+    query=request.GET.get('q')
 
     # Start with all products
     products = Product.objects.prefetch_related('variants__images')
+
+    if query:
+        products = products.filter(
+            Q(name__icontains=query) | 
+            Q(description__icontains=query)
+        )
 
     # Initialize a list to hold processed products
     processed_products = []

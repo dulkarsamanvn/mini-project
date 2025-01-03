@@ -1,6 +1,8 @@
 {% extends "userbase.html" %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <style>
     /* Previous styles remain the same */
     .container {
@@ -210,4 +212,18 @@
         </main>
     </div>
 </div>
+<script>
+    {% if messages %}
+    {% for message in messages %}
+    Toastify({
+         text: "{{ message }}",
+         duration: 3000,
+         close: true,
+         gravity: "top",
+         position: "center",
+         backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+    }).showToast();
+    {% endfor %}
+    {% endif %}
+ </script>
 {% endblock %}

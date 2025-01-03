@@ -1,8 +1,8 @@
 {% extends "userbase.html" %}
-
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
 <style>
     /* Container and Layout */
     .container {
@@ -245,6 +245,87 @@
         color: #666;
         margin-top: 10px;
     }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        button[type="submit"] {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #2980b9;
+        }
 </style>
 
 <div class="container">
@@ -279,7 +360,7 @@
         <!-- Main Content: Orders -->
         <main class="main-content">
             <h2>Your Orders</h2>
-
+        
             {% for order in orders %}
             <div class="order-card">
                 <div class="delivery-info">
@@ -296,31 +377,85 @@
                     <div class="product_new" style="line-height: 2;">
                         <strong>Order ID:</strong> {{ order.id }}<br>
                         <strong>Total:</strong> ₹{{ order.total_amount }}<br>
-                        <strong>Delivering Address:</strong>
+                        <strong>Delivering Address:</strong> 
                          {{ order.address.name }} ,
                          {{ order.address.address_line1 }},
                          {{ order.address.phone }},
-                         {{ order.address.city }} , {{order.address.postal_code}}
-                         {{order.address.state}},
+                         {{ order.address.city }} , {{ order.address.postal_code }}
+                         {{ order.address.state }},
                     </div>
                 </div>
             
                 <a href="{% url 'orders:order_items' order.id %}" class="btn btn-primary">View Items</a>
-                {% if order.order_status == 'PENDING' %}
+                <a href="{% url 'orders:generate_invoice' order.id %}" class="btn" style="background-color: rgb(210, 55, 55); color: white;">Invoice</a>
+                {% if order.order_status == 'PENDING' or order.order_status == 'CONFIRMED' %}
                 <a href="{% url 'orders:cancel_order' order.id %}" style="text-decoration: none;" class="cancel-btn">Cancel Order</a>
+                {% elif order.order_status == 'PAYMENT_PENDING' %}
+                <a href="{% url 'orders:razorpay_payment' order.id %}" style="text-decoration: none;" class="cancel-btn">Repay</a>
                 {% endif %}
             
                 {% if order.order_status == 'DELIVERED' %}
+                <!-- Trigger Modal -->
+                <button onclick="openReturnModal({{ order.id }})" style="background-color: #ff9900; border: none; color: white; position: relative; bottom: 36px; float: right;" class="btn btn-warning">Return</button>
                 <p class="exchange-info">For return or exchange, please contact support.</p>
                 <p class="rating">Rate this product: ⭐⭐⭐⭐⭐</p>
-                {% endif %}
+                {% elif order.order_status == 'PENDING RETURN' %}
+                <!-- Show Disabled Button -->
+                <!-- <button disabled style="background-color: gray; border: none; color: white;" 
+                        class="btn btn-secondary">Return Pending</button> -->
+                {% endif %}                
             </div>
             
             {% endfor %}
         </main>
+        
     </div>
 </div>
+
+<!-- ------------------------------------------------------- -->
+<div id="returnModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span onclick="closeReturnModal()" class="close-btn">&times;</span>
+        <h3>Return Order #<span id="orderId"></span></h3>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <div>
+                <label>
+                    <input type="checkbox" name="sizing_issues"> Sizing Issues
+                </label>
+                <label>
+                    <input type="checkbox" name="damaged_item"> Damaged Item
+                </label>
+                <label>
+                    <input type="checkbox" name="incorrect_order"> Incorrect Order
+                </label>
+                <label>
+                    <input type="checkbox" name="delivery_delays"> Delivery Delays
+                </label>
+                <textarea name="other_reason" placeholder="Other reasons..."></textarea>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
+
+
+<!-- ------------------------------------------------------- -->
 <script>
+ function openReturnModal(orderId) {
+    document.getElementById('returnModal').style.display = 'block';
+    document.getElementById('orderId').textContent = orderId;
+    const form = document.querySelector('#returnModal form');
+    form.action = `/orders/return/${orderId}`;
+}
+
+function closeReturnModal() {
+    document.getElementById('returnModal').style.display = 'none';
+}
+
+
+
      {% if messages %}
         {% for message in messages %}
         Toastify({

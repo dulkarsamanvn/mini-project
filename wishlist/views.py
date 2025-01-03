@@ -28,6 +28,7 @@ def add_to_wishlist(request, product_id):
         success = True
 
     return JsonResponse({'success': success, 'message': message})
+
 def view_wishlist(request):
     wishlist_items = Wishlist.objects.filter(user=request.user)
     

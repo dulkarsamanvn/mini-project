@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <title>Add Offer</title>
     <style>
         .container {
@@ -139,6 +141,25 @@
         }
 
         updateOptions();  // Initialize the dropdown based on the initial selection
+
+// -------------------------------------------------------------------------
+
+
+
+        {% if messages %}
+        {% for message in messages %}
+        Toastify({
+             text: "{{ message }}",
+             duration: 3000,
+             close: true,
+             gravity: "top",
+             position: "center",
+             backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+        }).showToast();
+        {% endfor %}
+        {% endif %}
+
+
     </script>
 </body>
 {% endblock %}

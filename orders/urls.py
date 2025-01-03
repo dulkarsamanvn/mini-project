@@ -14,5 +14,11 @@ urlpatterns = [
     path('razorpay-payment/<int:order_id>/', views.razorpay_payment, name='razorpay_payment'),
     path('apply_coupon/', views.apply_coupon, name='apply_coupon'),
 
+    # path('return/<int:order_id>',views.return_order,name='return_order'),
+    path('return/<int:order_id>', views.return_order, name='return_order'),
+    path('manage_returns/', views.manage_returns, name='manage_returns'),
+    path('approve_return/<int:return_id>/', views.approve_return, name='approve_return'),
 
+
+    path('invoice/<int:order_id>/', views.generate_invoice, name='generate_invoice'),
 ]
