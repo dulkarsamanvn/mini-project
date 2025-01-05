@@ -1,0 +1,139 @@
+{% extends 'userbase.html' %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brands Showcase</title>
+    <style>
+        .brands-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .subtitle::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: #000;
+        }
+
+        .brands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+            padding: 1rem;
+        }
+
+        .brand-item {
+            border: 1px solid #e0e0e0;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px;
+            transition: transform 0.3s ease;
+        }
+
+        .brand-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .brand-logo {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        @media (max-width: 768px) {
+            .brands-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="brands-section">
+        <h1 class="main-title">BRANDS</h1>
+        <h2 class="subtitle">DISCOVER FEATURED BRANDS</h2>
+        
+        <div class="brands-grid">
+            <div class="brand-item">
+                <img src="https://1000logos.net/wp-content/uploads/2021/11/amazfit-logo.png" alt="Amazfit" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://cdn.worldvectorlogo.com/logos/balmain-paris-logo.svg" alt="Balmain" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://seeklogo.com/images/B/boat-logo-F99CE766FA-seeklogo.com.png" alt="Boat" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://1000logos.net/wp-content/uploads/2017/12/Casio-Logo.png" alt="Casio" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Diesel_Logo_2015.png/1200px-Diesel_Logo_2015.png" alt="Diesel" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://i.pinimg.com/originals/e0/ce/07/e0ce0771f4e6c58203eeb6a638375500.png" alt="Longines" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://cdn.freelogovectors.net/wp-content/uploads/2023/09/noise-logo-freelogovectors.net_.png" alt="Noise" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Seiko_logo.svg/2560px-Seiko_logo.svg.png" alt="Seiko" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Tissot_Logo.svg/1200px-Tissot_Logo.svg.png" alt="Tissot" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://i.pinimg.com/originals/d3/ca/44/d3ca44ad81a24fcbe71b4e2d78e8d41b.png" alt="Titan" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://pngimg.com/d/calvin_klein_PNG10.png" alt="Calvin Klein" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://download.logo.wine/logo/Citizen_Watch/Citizen_Watch-Logo.wine.png" alt="Citizen" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://1000logos.net/wp-content/uploads/2020/09/Fossil-Logo.jpg" alt="Fossil" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://i.pinimg.com/736x/09/d9/a8/09d9a8956c1bc668e5a96df0b6e4f216.jpg" alt="Guess" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://1000logos.net/wp-content/uploads/2022/08/Tommy-Hilfiger-logo.png" alt="Tommy Hilfiger" class="brand-logo">
+            </div>
+            <div class="brand-item">
+                <img src="https://graphicsprings.com/wp-content/uploads/2023/07/image-84-1024x576.png?x61814" alt="Versace" class="brand-logo">
+            </div>
+        </div>
+    </section>
+</body>
+{% endblock %}

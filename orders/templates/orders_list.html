@@ -396,7 +396,7 @@
             
                 {% if order.order_status == 'DELIVERED' %}
                 <!-- Trigger Modal -->
-                <button onclick="openReturnModal({{ order.id }})" style="background-color: #ff9900; border: none; color: white; position: relative; bottom: 36px; float: right;" class="btn btn-warning">Return</button>
+                <button onclick="openReturnModal({{ order.id }})" style="background-color: #ff9900; border: none; color: white; position: relative;  float: right;" class="btn btn-warning">Return</button>
                 <p class="exchange-info">For return or exchange, please contact support.</p>
                 <p class="rating">Rate this product: ⭐⭐⭐⭐⭐</p>
                 {% elif order.order_status == 'PENDING RETURN' %}

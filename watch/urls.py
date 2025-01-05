@@ -31,6 +31,7 @@ urlpatterns = [
     path('offer-management/', include('offer_management.urls')),
     path('wallet/', include('wallet.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('policy/', include('policy.urls')),
     path('auth/', include('social_django.urls', namespace='social')),
     
 ]

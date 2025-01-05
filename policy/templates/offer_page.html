@@ -1,0 +1,303 @@
+{% extends 'userbase.html' %}
+{% load static %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Watch Store</title>
+    <style>
+         .hero {
+            min-height: 80vh;
+            background: linear-gradient(to bottom right, 
+                #8B0000, 
+                #FF4500,
+                #FF8C00,
+                #4B0082
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: white;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: white;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .discover-btn {
+            background: black;
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 25px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            letter-spacing: 0.1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .discover-btn:hover {
+            background: #333;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                min-height: 60vh;
+            }
+        }
+        
+
+        .collection {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .collection h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .collection p {
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .gender-cards {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .card img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+
+        .card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            text-transform: uppercase;
+        }
+
+        .budget {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .budget h2 {
+            margin-bottom: 40px;
+        }
+
+        .price-circles {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .circle {
+            width: 150px;
+            height: 150px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .brands {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .brand-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 40px auto;
+        }
+
+        .brand-logo {
+            border: 1px solid #ddd;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 80px;
+        }
+        .brand-logo img {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .brand-logo img:hover {
+            transform: scale(1.1);
+        }
+
+        .fossil-banner {
+            max-width: 1200px;
+            margin: 0 auto 60px;
+        }
+
+        .fossil-banner img {
+            width: 100%;
+            height: auto;
+        }
+
+        .cta-button {
+            background: #ff0000;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: block;
+            margin: 0 auto;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>AUTUMN SALE</h1>
+            <p>STEP INTO THE FESTIVE SEASON WITH EXCLUSIVE DEALS</p>
+            <a href="{% url 'home' %}">
+                <button class="discover-btn">DISCOVER</button>
+            </a>
+            
+        </div>
+    </section>
+
+    <section class="collection">
+        <h2>GREATEST COLLECTION FOR WOMEN & MEN</h2>
+        <p>EXPERIENCE OUR PRESTIGIOUS AFTER-SALES SERVICE</p>
+        <div class="gender-cards">
+            <div class="card">
+                <img src="{% static 'images/women.png' %}" alt="Women's Collection">
+                <a href="{% url 'policy:womens_page' %}">
+                    <div class="card-overlay">SHOP FOR HER</div>
+                </a>
+                
+            </div>
+            <div class="card">
+                <img src="{% static 'images/men.png' %}" alt="Men's Collection">
+                <a href="{% url 'policy:mens_page' %}">
+                    <div class="card-overlay">SHOP FOR HIM</div>
+                </a>
+                
+            </div>
+        </div>
+    </section>
+
+    <section class="budget">
+        <h2>SHOP BY BUDGET</h2>
+        <div class="price-circles">
+            <div class="circle">
+                <span>UPTO</span>
+                <strong>₹ 20,000</strong>
+            </div>
+            <div class="circle">
+                <span>UPTO</span>
+                <strong>₹ 40,000</strong>
+            </div>
+            <div class="circle">
+                <span>UPTO</span>
+                <strong>₹ 60,000</strong>
+            </div>
+            <div class="circle">
+                <span>ABOVE</span>
+                <strong>₹ 60,000</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="brands">
+        <h2>40+ INTERNATIONALLY RECOGNIZED BRANDS</h2>
+        <p>A SINGLE, RELIABLE DESTINATION</p>
+        <div class="brand-grid">
+            <div class="brand-logo">
+                <img src="https://1000logos.net/wp-content/uploads/2021/11/amazfit-logo.png" alt="Amazfit Logo">
+            </div>
+            <div class="brand-logo">
+                <img src="https://cdn.worldvectorlogo.com/logos/balmain-paris-logo.svg" alt="Balmain Logo">
+            </div>
+            <div class="brand-logo">
+                <img src="https://seeklogo.com/images/B/boat-logo-F99CE766FA-seeklogo.com.png" alt="Boat Logo">
+            </div>
+            <div class="brand-logo">
+                <img src="https://1000logos.net/wp-content/uploads/2017/12/Casio-Logo.png" alt="Casio Logo">
+            </div>
+            <div class="brand-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Diesel_Logo_2015.png/1200px-Diesel_Logo_2015.png" alt="Diesel Logo">
+            </div>
+            <div class="brand-logo">
+                <img src="https://i.pinimg.com/originals/e0/ce/07/e0ce0771f4e6c58203eeb6a638375500.png" alt="Longines Logo">
+            </div>
+            <div class="brand-logo">
+                <img src="https://cdn.freelogovectors.net/wp-content/uploads/2023/09/noise-logo-freelogovectors.net_.png" alt="Noise Logo">
+            </div>
+            <div class="brand-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Seiko_logo.svg/2560px-Seiko_logo.svg.png" alt="Seiko Logo">
+            </div>
+            <div class="brand-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Tissot_Logo.svg/1200px-Tissot_Logo.svg.png" alt="Tissot Logo">
+            </div>
+            <div class="brand-logo">
+                <img src="https://i.pinimg.com/originals/d3/ca/44/d3ca44ad81a24fcbe71b4e2d78e8d41b.png" alt="Titan Logo">
+            </div>
+        </div>
+        
+    </section>
+
+    <div class="fossil-banner">
+        <img src="{% static 'images/women_banner.jpg' %}" alt="Fossil Watches">
+    </div>
+
+    <a href="{% url 'home'  %}" style="text-decoration: none;"><button class="cta-button">Discover all offers</button></a>
+</body>
+{% endblock %}

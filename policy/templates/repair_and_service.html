@@ -1,0 +1,124 @@
+{% extends 'userbase.html' %}
+{% load static %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Repair and Service</title>
+    <style>
+
+        body {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1a1a1a;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #2a2a2a;
+        }
+
+        .description {
+            text-align: justify;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+            color: #444;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .services-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .services-title {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #2a2a2a;
+        }
+
+        .services-list {
+            list-style-position: inside;
+            padding-left: 1rem;
+        }
+
+        .services-list li {
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+            color: #444;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1.5rem;
+            }
+
+            .description {
+                font-size: 1rem;
+            }
+
+            .services-list li {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">REPAIR AND SERVICE</h1>
+        
+        <img src="
+        {% static 'images\repair.png' %}" alt="Watch mechanism closeup" class="hero-image">
+        
+        <h2 class="subtitle">Watch Repair Made Simple</h2>
+        
+        <p class="description">
+            Our Easy-To-Use Ordering Process Makes It Simple To Place Your Order, So You Can Mail Your Watch To Our Certified Watchmakers. We Evaluate It For Free, And You Choose The Repairs You Want! We Then Simply Perform The Repair And Send It Right Back To You. The Luxe Tickers Care Services And Repairs Over 40+ Of The World's Top Luxury Watch Brands. We Operate A State-Of-The-Art Service Center And Collection Center In India.
+        </p>
+
+        <div class="services-section">
+            <h3 class="services-title">Our Services</h3>
+            <ul class="services-list">
+                <li>Battery Check & Replacement</li>
+                <li>Strap And Bracelet Replacement</li>
+                <li>Bracelet Link Removal And Adjustment</li>
+                <li>Service Of Movement</li>
+                <li>Complete Maintenance</li>
+                <li>Buffing</li>
+            </ul>
+        </div>
+    </div>
+</body>
+{% endblock %}

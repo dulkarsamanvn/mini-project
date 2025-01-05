@@ -1,0 +1,176 @@
+{% extends 'userbase.html' %}
+{% load static %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Store Outlets</title>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #1a1a1a;
+        }
+
+        .outlets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            background: #e0e0e0;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .outlet-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .outlet-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .outlet-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .outlet-address {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        .support-text {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+
+        .phone-number {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #1a1a1a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .phone-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .coming-soon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            background: #e0e0e0;
+            padding: 2rem;
+            border-radius: 1rem;
+        }
+
+        .coming-soon-card {
+            text-align: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .coming-soon-image {
+            width: 200px;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .title {
+                font-size: 2rem;
+                margin-bottom: 2rem;
+            }
+
+            .outlets-grid, .coming-soon-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">OUTLETS</h1>
+
+        <div class="outlets-grid">
+            <div class="outlet-card">
+                <img src="{% static 'images\stores1.png' %}" alt="Hilite Mall Calicut Store" class="outlet-image">
+                <h2 class="outlet-title">Hilite Mall-Calicut</h2>
+                <p class="outlet-address">Luxe Tickers,Hilite Mall,2nd Floor,Calicut-673008</p>
+                <p class="support-text">Personalized Support</p>
+                <a href="tel:1412637654" class="phone-number">
+                    <span>📞</span>
+                    1412637654
+                </a>
+            </div>
+
+            <div class="outlet-card">
+                <img src="{% static 'images\stores1.png' %}" alt="Chungam Junction Kalpetta Store" class="outlet-image">
+                <h2 class="outlet-title">Chungam Jnction-Kalpetta</h2>
+                <p class="outlet-address">Luxe Tickers,Chungam Junction,near Chemmanur Jeweller,Kalpetta-673121</p>
+                <p class="support-text">Personalized Support</p>
+                <a href="tel:1474683955" class="phone-number">
+                    <span>📞</span>
+                    1474683955
+                </a>
+            </div>
+
+            <div class="outlet-card">
+                <img src="{% static 'images\stores1.png' %}" alt="Market Square Mall Bangalore Store" class="outlet-image">
+                <h2 class="outlet-title">Market Sqaure Mall-Bangalore</h2>
+                <p class="outlet-address">Luxe Tickers,Market Square Mall, Madiwala,bangalore</p>
+                <p class="support-text">Personalized Support</p>
+                <a href="tel:1412564704" class="phone-number">
+                    <span>📞</span>
+                    1412564704
+                </a>
+            </div>
+        </div>
+
+        <div class="coming-soon-grid">
+            <div class="coming-soon-card">
+                <img src="{% static 'images\opening_soon.png' %}" alt="Opening Soon Delhi" class="coming-soon-image">
+                <h2 class="outlet-title">Delhi</h2>
+                <p class="outlet-address">Opening Soon</p>
+            </div>
+
+            <div class="coming-soon-card">
+                <img src="{% static 'images\opening_soon.png' %}" alt="Opening Soon Udaipur" class="coming-soon-image">
+                <h2 class="outlet-title">Udaipur</h2>
+                <p class="outlet-address">Opening Soon</p>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}

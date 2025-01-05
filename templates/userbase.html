@@ -270,26 +270,15 @@
         </a>
 
         <ul class="nav-menu">
-            <li>
-                Men
-                <!-- <div class="dropdown">
-                    <div>Chronograph</div>
-                    <div>Automatic</div>
-                    <div>Digital</div>
-                </div> -->
-            </li>
-            <li>
-                Women
-                <!-- <div class="dropdown">
-                    <div>Luxury</div>
-                    <div>Fashion</div>
-                    <div>Smart</div>
-                </div> -->
-            </li>
-            <li>Offers</li>
-            <li>Brands</li>
-            <li>Repair & Service</li>
-            <li>Stores</li>
+            <a href="{% url 'policy:mens_page' %}" style="text-decoration: none; color: #000;"><li> Men</li></a>
+            <a href="{% url 'policy:womens_page' %}" style="text-decoration: none; color: #000;"><li> Women</li></a>
+            <a href="{% url 'policy:offer_page' %}" style="text-decoration: none; color: #000;"><li> Offers</li></a>
+            <a href="{% url 'policy:available_brands' %}" style="text-decoration: none; color: black;"><li>Brands</li></a>
+            <a href="{% url 'policy:repair_and_service' %}" style="text-decoration: none; color: #000;">
+                <li>Repair & Service</li>
+            </a>
+            <a href="{% url 'policy:stores' %}" style="text-decoration: none; color: black;"><li>Stores</li></a>
+            
         </ul>
         <div class="nav-icons">
             <!-- <div class="icon-wrapper">
@@ -373,8 +362,12 @@
             <div>
                 <div class="footer-title">COMPANY</div>
                 <ul class="footer-links">
-                    <li>Our Store</li>
-                    <li>Repair & Service</li>
+                    <a href="{% url 'policy:stores' %}" style="text-decoration: none; color: #000;">
+                        <li>Our Store</li>
+                    </a>
+                    <a href="{% url 'policy:repair_and_service' %}" style="text-decoration: none; color: #000;">
+                        <li>Repair & Service</li>
+                    </a>
                     <li>Ask To Experts</li>
                 </ul>
             </div>

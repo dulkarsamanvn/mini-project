@@ -287,97 +287,273 @@ from wishlist.models import Wishlist
 #     }
 #     return render(request, "home.html", context)
 
+# -------------------------below is the new home view----------------------------------------------------
+
+# @login_required
+# def home_view(request):
+#     # Fetch categories and brands that are listed
+#     categories = Category.objects.filter(is_listed=True)
+#     brands = Brand.objects.filter(is_listed=True)
+
+#     # Get the sort_by query parameter
+#     sort_by = request.GET.get('sort_by')
+#     query=request.GET.get('q')
+
+#     # Start with all products
+#     products = Product.objects.prefetch_related('variants__images')
+
+#     if query:
+#         products = products.filter(
+#             Q(name__icontains=query) | 
+#             Q(description__icontains=query)
+#         )
+
+#     # Initialize a list to hold processed products
+#     processed_products = []
+
+#     for product in products:
+#         # Get the first (primary) variant for sorting and display
+#         primary_variant = product.variants.first()
+#         if not primary_variant:
+#             continue
+
+#         # Get the primary image
+#         primary_image = primary_variant.images.filter(is_primary=True).first()
+#         primary_image_url = primary_image.image.url if primary_image else None
+
+#         # Calculate the discounted price for the primary variant
+#         today = date.today()
+#         category_offers = Offer.objects.filter(
+#             offer_type='category',
+#             category=product.category,
+#             end_date__gte=today
+#         ).order_by('-discount')
+
+#         product_offers = Offer.objects.filter(
+#             offer_type='product',
+#             product=product,
+#             end_date__gte=today
+#         ).order_by('-discount')
+
+#         category_discount = category_offers.first().discount if category_offers.exists() else Decimal('0')
+#         product_discount = product_offers.first().discount if product_offers.exists() else Decimal('0')
+
+#         highest_discount = max(category_discount, product_discount)
+#         discounted_price = primary_variant.price * (1 - (highest_discount / Decimal('100')))
+
+#         # Add product data to processed_products
+#         processed_products.append({
+#             'id': product.id,
+#             'name': product.name,
+#             'price': primary_variant.price,
+#             'discounted_price': round(discounted_price, 2),  # Round to 2 decimal places
+#             'offer_discount':highest_discount,
+#             'case_color': primary_variant.case_color,
+#             'dial_color': primary_variant.dial_color,
+#             'primary_image_url': primary_image_url,
+#             'dial_colors': [variant.dial_color for variant in product.variants.all()],
+#             'created_at': product.created_at,  # Include for sorting by 'newest_first'
+#         })
+
+#     # Sort the processed products based on the `sort_by` parameter
+#     if sort_by == 'price_low_to_high':
+#         processed_products.sort(key=lambda x: x['discounted_price'])
+#     elif sort_by == 'price_high_to_low':
+#         processed_products.sort(key=lambda x: x['discounted_price'], reverse=True)
+#     elif sort_by == 'newest_first':
+#         processed_products.sort(key=lambda x: x['created_at'], reverse=True)
+#     elif sort_by == 'a_to_z':  # Sort by name A-Z
+#         processed_products.sort(key=lambda x: x['name'].lower())
+#     elif sort_by == 'z_to_a':  # Sort by name Z-A
+#         processed_products.sort(key=lambda x: x['name'].lower(), reverse=True)
+
+#     # Return JSON response for AJAX requests
+#     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#         return JsonResponse({'products': processed_products})
+
+#     # Render the template with products and filters for non-AJAX requests
+#     context = {
+#         'brands': brands,
+#         'categories': categories,
+#         'products': processed_products,
+#     }
+#     return render(request, "home.html", context)
+
+# -------------------------------------------------------------------------------------------
+
+from django.core.paginator import Paginator
+from django.db.models import OuterRef, Subquery, Q
+from django.db.models import Subquery, OuterRef, F, Q, DecimalField
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.shortcuts import render
+from datetime import date
+from decimal import Decimal
+from category.models import Category
+from brand.models import Brand
+from offer_management.models import Offer
+from product.models import Product, ProductVariant, ProductVariantImage
 
 
-@login_required
 def home_view(request):
-    # Fetch categories and brands that are listed
     categories = Category.objects.filter(is_listed=True)
     brands = Brand.objects.filter(is_listed=True)
 
-    # Get the sort_by query parameter
+    # Subquery to get the primary variant for each product
+    primary_variant_subquery = ProductVariant.objects.filter(
+        product=OuterRef('pk'),
+        images__is_primary=True
+    ).values('id')[:1]
+
+    # Subquery to get the price of the primary variant
+    primary_variant_price_subquery = ProductVariant.objects.filter(
+        product=OuterRef('pk'),
+        images__is_primary=True
+    ).values('price')[:1]
+
+    # Annotate products with the primary variant ID and price
+    products = Product.objects.annotate(
+        primary_variant_id=Subquery(primary_variant_subquery),
+        primary_variant_price=Subquery(primary_variant_price_subquery, output_field=DecimalField(max_digits=10, decimal_places=2))
+    ).filter(primary_variant_id__isnull=False)
+
+    # Get query parameters
     sort_by = request.GET.get('sort_by')
-    query=request.GET.get('q')
+    query = request.GET.get('q')
+    page_number = request.GET.get('page', 1)
 
-    # Start with all products
-    products = Product.objects.prefetch_related('variants__images')
+    # Apply brand filter
+    selected_brands = request.GET.getlist('brand', [])
+    selected_brands = [int(b) for b in selected_brands if b.isdigit()]
+    if selected_brands:
+        products = products.filter(brand__id__in=selected_brands)
 
+    # Apply category filter
+    selected_categories = request.GET.getlist('category', [])
+    selected_categories = [int(c) for c in selected_categories if c.isdigit()]
+    if selected_categories:
+        products = products.filter(category__id__in=selected_categories)
+
+    # Apply price range filter
+    selected_prices = request.GET.getlist('price', [])
+    if selected_prices:
+        price_filters = Q()
+        for price in selected_prices:
+            if price == "under_20000":
+                price_filters |= Q(primary_variant_price__lt=20000)
+            elif price == "20000_50000":
+                price_filters |= Q(primary_variant_price__gte=20000, primary_variant_price__lte=50000)
+            elif price == "above_50000":
+                price_filters |= Q(primary_variant_price__gt=50000)
+        products = products.filter(price_filters)
+
+    # Apply search query
     if query:
         products = products.filter(
-            Q(name__icontains=query) | 
+            Q(name__icontains=query) |
             Q(description__icontains=query)
         )
 
-    # Initialize a list to hold processed products
-    processed_products = []
+    # Get wishlist items for the current user
+    wishlist_items = []
+    if request.user.is_authenticated:
+        wishlist_items = Wishlist.objects.filter(user=request.user).values_list('product_id', flat=True)
 
+    # Apply sorting with proper annotations
+    if sort_by == 'price_low_to_high':
+        products = products.order_by('primary_variant_price')
+    elif sort_by == 'price_high_to_low':
+        products = products.order_by('-primary_variant_price')
+    elif sort_by == 'newest_first':
+        products = products.order_by('-created_at')
+    elif sort_by == 'a_to_z':
+        products = products.order_by('name')
+    elif sort_by == 'z_to_a':
+        products = products.order_by('-name')
+
+    # Process products for display
+    processed_products = []
+    today = date.today()
+    
     for product in products:
-        # Get the first (primary) variant for sorting and display
-        primary_variant = product.variants.first()
+        primary_variant = ProductVariant.objects.filter(
+            id=product.primary_variant_id
+        ).select_related('product').prefetch_related('images').first()
+
         if not primary_variant:
             continue
 
-        # Get the primary image
+        # Get primary image
         primary_image = primary_variant.images.filter(is_primary=True).first()
         primary_image_url = primary_image.image.url if primary_image else None
 
-        # Calculate the discounted price for the primary variant
-        today = date.today()
-        category_offers = Offer.objects.filter(
+        # Calculate discounts
+        category_discount = Decimal('0')
+        product_discount = Decimal('0')
+
+        category_offer = Offer.objects.filter(
             offer_type='category',
             category=product.category,
             end_date__gte=today
-        ).order_by('-discount')
-
-        product_offers = Offer.objects.filter(
+        ).order_by('-discount').first()
+        
+        product_offer = Offer.objects.filter(
             offer_type='product',
             product=product,
             end_date__gte=today
-        ).order_by('-discount')
+        ).order_by('-discount').first()
 
-        category_discount = category_offers.first().discount if category_offers.exists() else Decimal('0')
-        product_discount = product_offers.first().discount if product_offers.exists() else Decimal('0')
+        if category_offer:
+            category_discount = category_offer.discount
+        if product_offer:
+            product_discount = product_offer.discount
 
         highest_discount = max(category_discount, product_discount)
         discounted_price = primary_variant.price * (1 - (highest_discount / Decimal('100')))
 
-        # Add product data to processed_products
         processed_products.append({
             'id': product.id,
             'name': product.name,
             'price': primary_variant.price,
-            'discounted_price': round(discounted_price, 2),  # Round to 2 decimal places
-            'offer_discount':highest_discount,
+            'discounted_price': round(discounted_price, 2),
+            'offer_discount': highest_discount,
             'case_color': primary_variant.case_color,
             'dial_color': primary_variant.dial_color,
             'primary_image_url': primary_image_url,
             'dial_colors': [variant.dial_color for variant in product.variants.all()],
-            'created_at': product.created_at,  # Include for sorting by 'newest_first'
+            'created_at': product.created_at,
+            'in_wishlist': product.id in wishlist_items  # Add wishlist status
         })
 
-    # Sort the processed products based on the `sort_by` parameter
+    # Sort processed products if needed for discounted prices
     if sort_by == 'price_low_to_high':
         processed_products.sort(key=lambda x: x['discounted_price'])
     elif sort_by == 'price_high_to_low':
         processed_products.sort(key=lambda x: x['discounted_price'], reverse=True)
-    elif sort_by == 'newest_first':
-        processed_products.sort(key=lambda x: x['created_at'], reverse=True)
-    elif sort_by == 'a_to_z':  # Sort by name A-Z
-        processed_products.sort(key=lambda x: x['name'].lower())
-    elif sort_by == 'z_to_a':  # Sort by name Z-A
-        processed_products.sort(key=lambda x: x['name'].lower(), reverse=True)
 
-    # Return JSON response for AJAX requests
+    # Paginate products
+    paginator = Paginator(processed_products, 9)
+    page_obj = paginator.get_page(page_number)
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'products': processed_products})
+        return JsonResponse({
+            'products': list(page_obj),
+            'current_page': page_obj.number,
+            'total_pages': paginator.num_pages,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+        })
 
-    # Render the template with products and filters for non-AJAX requests
     context = {
         'brands': brands,
         'categories': categories,
-        'products': processed_products,
+        'products': page_obj,
     }
     return render(request, "home.html", context)
+
+
+
+
 
 
 @never_cache

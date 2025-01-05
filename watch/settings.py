@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'offer_management',
     'wallet',
     'dashboard',
+    'policy',
     'social_django',
 ]
 
@@ -238,3 +239,7 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+
+
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static"), ]

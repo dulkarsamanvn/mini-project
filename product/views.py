@@ -146,7 +146,7 @@ def manage_variants(request, product_id):
     variants = product.variants.all()
 
     if request.method == "POST":
-        # Add new variant
+        variant_id = request.POST.get('variant_id')
         case_color = request.POST.get('case_color')
         dial_color = request.POST.get('dial_color')
         strap_material = request.POST.get('strap_material')
@@ -154,32 +154,76 @@ def manage_variants(request, product_id):
         quantity = request.POST.get('quantity')
         status = request.POST.get('status')
 
-        variant = ProductVariant.objects.create(
-            product=product,
-            case_color=case_color,
-            dial_color=dial_color,
-            strap_material=strap_material,
-            price=price,
-            quantity=quantity,
-            status=status,
-        )
+        if variant_id:  # Edit existing variant
+            try:
+                variant = ProductVariant.objects.get(id=variant_id)
+                variant.case_color = case_color
+                variant.dial_color = dial_color
+                variant.strap_material = strap_material
+                variant.price = price
+                variant.quantity = quantity
+                variant.status = status
+                variant.save()
 
-        # Handle multiple image uploads
-        primary_image_set = False
-        for i in range(5):
-            image_file = request.FILES.get(f'image_{i}')
-            if image_file:
-                    # If this is the first image uploaded, set it as the primary image
+                # Handle image updates
+                # Delete images marked for deletion
+                images_to_delete = request.POST.getlist('delete_images')
+                if images_to_delete:
+                    ProductVariantImage.objects.filter(id__in=images_to_delete).delete()
+
+                # Add new images
+                primary_image_exists = variant.images.filter(is_primary=True).exists()
+                for i in range(5):
+                    image_file = request.FILES.get(f'image_{i}')
+                    if image_file:
+                        # If no primary image exists or this is marked as primary
+                        is_primary = not primary_image_exists and i == 0
+                        if is_primary:
+                            primary_image_exists = True
+                        ProductVariantImage.objects.create(
+                            variant=variant,
+                            image=image_file,
+                            is_primary=is_primary
+                        )
+
+                messages.success(request, 'Variant updated successfully')
+            except ProductVariant.DoesNotExist:
+                messages.error(request, 'Variant not found')
+
+        else:  # Add new variant
+            variant = ProductVariant.objects.create(
+                product=product,
+                case_color=case_color,
+                dial_color=dial_color,
+                strap_material=strap_material,
+                price=price,
+                quantity=quantity,
+                status=status,
+            )
+
+            # Handle multiple image uploads for new variant
+            primary_image_set = False
+            for i in range(5):
+                image_file = request.FILES.get(f'image_{i}')
+                if image_file:
+                    # If this is the first image uploaded, set it as primary
                     is_primary = not primary_image_set
                     if is_primary:
                         primary_image_set = True
-                    # Create the ProductVariantImage and set its primary status
-                    ProductVariantImage.objects.create(variant=variant, image=image_file, is_primary=is_primary)
-        
-        messages.success(request,'variant added successfully')
+                    ProductVariantImage.objects.create(
+                        variant=variant,
+                        image=image_file,
+                        is_primary=is_primary
+                    )
+            
+            messages.success(request, 'Variant added successfully')
+
         return redirect('product:manage_variants', product_id=product.id)
 
-    return render(request, 'manage_variants.html', {'product': product, 'variants': variants})
+    return render(request, 'manage_variants.html', {
+        'product': product,
+        'variants': variants
+    })
 
 @login_required
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)

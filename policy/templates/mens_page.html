@@ -1,0 +1,891 @@
+{% extends "userbase.html" %}
+{% load static %}
+{% block content %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+<!-- <div class="hero">
+    <img src="{% static 'images\mens_banner.png' %}" 
+         alt="Men's Watch Hero" 
+         style="width: 100%; height: 450px; object-fit: cover;">
+</div> -->
+
+<main class="products-container">
+    <div class="products-header">
+        <h1>MEN'S COLLECTIONS</h1>
+    </div>
+
+    <div class="products-layout">
+        <!-- Products Grid -->
+        <div class="products-content">
+            <div class="products-top">
+                <div class="sort-by">
+                    <select name="sort_by" onchange="applySorting()">
+                        <option value="">Sort By</option>
+                        <option value="price_low_to_high">Price: Low to High</option>
+                        <option value="price_high_to_low">Price: High to Low</option>
+                        <option value="newest_first">Newest First</option>
+                        <option value="a_to_z">Name: A to Z</option>
+                        <option value="z_to_a">Name: Z to A</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="products-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    {% if product.offer_discount > 0 %}
+                    <p class="offer_discount">{{ product.offer_discount|floatformat:0 }}% off</p>
+                    {% endif %}
+                    <a href="{% url 'product:product_detail' product.id %}" style="text-decoration: none;">
+                        <img src="{{ product.primary_image_url }}" alt="{{ product.name }}" class="product-image">
+                        <h3>{{ product.name }}</h3>
+                        <p class="price">
+                            {% if product.discounted_price and product.discounted_price < product.price %}
+                                <span class="original-price" style="text-decoration: line-through; color: grey;">₹ {{ product.price }}</span>
+                                <span class="discounted-price" style="color: red; font: bold;">₹ {{ product.discounted_price }}</span>
+                            {% else %}
+                                ₹ {{ product.price }}
+                            {% endif %}
+                        </p>
+                    </a>
+                    <div class="dial-colors">
+                        {% for color in product.dial_colors %}
+                        <span class="color-circle" style="background-color: {{ color }};"></span>
+                        {% empty %}
+                        <p>No dial colors available.</p>
+                        {% endfor %}
+                    </div>
+                    <button 
+                        class="btn add-to-wishlist" 
+                        data-product-id="{{ product.id }}" 
+                        style="background: transparent; border: none; cursor: pointer;">
+                        <i class="{% if product.in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="font-size: 20px;"></i>
+                    </button>
+                </div>
+                {% empty %}
+                <p>No products available.</p>
+                {% endfor %}
+            </div>
+
+            <div class="pagination">
+                {% if products.has_previous %}
+                    <a href="?page={{ products.previous_page_number }}&sort_by={{ request.GET.sort_by|default:'' }}&q={{ request.GET.q|default:'' }}" class="prev" style="color: black;">Previous</a>
+                {% endif %}
+            
+                <span>Page {{ products.number }} of {{ products.paginator.num_pages }}</span>
+            
+                {% if products.has_next %}
+                    <a href="?page={{ products.next_page_number }}&sort_by={{ request.GET.sort_by|default:'' }}&q={{ request.GET.q|default:'' }}" class="next" style="color: black;">Next</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+   .offer_discount{
+        color: red;
+        width: 70px;
+        height: 20px;
+        border-radius: 11px; 
+        position: absolute;
+        top: 15px;
+    }
+    .products-container {
+        padding: 20px 40px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .products-header {
+        background: #f5f5f5;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .products-layout {
+        display: flex;
+        gap: 30px;
+    }
+
+    .filters {
+        width: 250px;
+        flex-shrink: 0;
+    }
+
+    /* Products Grid */
+    .products-content {
+        flex: 1;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        /* Reduced from 250px to 220px */
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .product-card {
+        position: relative;  /* This allows absolute positioning inside the card */
+        border: 1px solid #e0e0e0;
+        padding: 12px;
+        text-align: center;
+        border-radius: 4px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .product-card img {
+        width: 100%;
+        height: auto;
+        margin-bottom: 15px;
+    }
+
+    .product-card h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .price {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .case-colors {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .case-colors span:first-child {
+        margin-right: 10px;
+    }
+
+    .dial-colors {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .dial-colors span:first-child {
+        margin-right: 10px;
+    }
+
+    .color-circle {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        margin: 0 5px;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+    }
+
+    .product-image {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+    }
+
+    .color-list {
+        margin-top: 10px;
+    }
+
+    .color-box {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        margin: 0 5px;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+    }
+
+    .color-swatch {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin: 0 5px;
+        border: 1px solid #fff;
+    }
+
+    .filter-group {
+        border-bottom: 1px solid #e0e0e0;
+        margin-bottom: 15px;
+    }
+
+    .filter-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .filter-name {
+        flex-grow: 1;
+        font-weight: 500;
+    }
+
+    .toggle-icon {
+        margin-right: 10px;
+        transition: transform 0.3s ease;
+    }
+
+    .filter-group.active .toggle-icon {
+        transform: rotate(90deg);
+    }
+
+    .clear-btn {
+        background: none;
+        border: none;
+        color: #666;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 0 5px;
+    }
+
+    .clear-btn:hover {
+        text-decoration: underline;
+    }
+
+    .filter-content {
+        display: none;
+        padding: 10px 0;
+    }
+
+    .filter-group.active .filter-content {
+        display: block;
+    }
+
+    .filter-content label {
+        display: block;
+        padding: 5px 0;
+        cursor: pointer;
+    }
+
+    .filter-content input[type="checkbox"] {
+        margin-right: 8px;
+    }
+
+    /* Products Grid */
+    .products-content {
+        flex: 1;
+    }
+
+    .products-top {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+
+    .sort-by select {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        min-width: 200px;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .product-card {
+        border: 1px solid #e0e0e0;
+        padding: 15px;
+        text-align: center;
+        border-radius: 4px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-card img {
+        width: 100%;
+        height: auto;
+        margin-bottom: 15px;
+    }
+
+    .product-card h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .product-image {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+    }
+
+
+    .price {
+        font-weight: bold;
+        color: #000;
+    }
+
+    /* Pagination */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .page-numbers {
+        display: flex;
+        gap: 5px;
+    }
+
+    .page-numbers span {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .page-numbers span.active {
+        background: #000;
+        color: white;
+        border-color: #000;
+    }
+
+    .prev-btn,
+    .next-btn {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+    }
+    .add-to-wishlist {
+        position: absolute; /* Position the button at the bottom-right */
+        top: 25px;
+        right:25px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+    }
+
+    .add-to-wishlist i {
+        font-size: 20px;
+        color: #333;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+        
+
+    @media (max-width: 768px) {
+        .products-container {
+            padding: 15px;
+        }
+
+        .products-layout {
+            flex-direction: column;
+        }
+
+        .filters {
+            width: 100%;
+        }
+    }
+    .mens-specific-filter {
+        background-color: #f8f8f8;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+</style>
+
+<script>
+// // Update all URLs in JavaScript functions to use '/mens/' instead of '/home/'
+// document.addEventListener('DOMContentLoaded', function() {
+//     document.querySelectorAll('.add-to-wishlist').forEach(button => {
+//         button.addEventListener('click', function() {
+//             const productId = this.dataset.productId;
+//             const url = "{% url 'wishlist:add_to_wishlist' 0 %}".replace("0", productId);
+//             const icon = this.querySelector('i');
+            
+//             fetch(url, {
+//                 method: 'GET',
+//                 headers: {
+//                     'X-Requested-With': 'XMLHttpRequest',
+//                 },
+//             })
+//             .then(response => response.json())
+//             .then(data => {
+//                 if (data.success) {
+//                     icon.classList.toggle('far');
+//                     icon.classList.toggle('fas');
+//                     icon.style.color = icon.classList.contains('fas') ? 'red' : 'black';
+//                 }
+                
+//                 Toastify({
+//                     text: data.message,
+//                     duration: 3000,
+//                     close: true,
+//                     gravity: "top",
+//                     position: "center",
+//                     backgroundColor: data.success ? "green" : "red",
+//                 }).showToast();
+//             })
+//             .catch(error => console.error('Error:', error));
+//         });
+//     });
+// });
+
+// function applySorting() {
+//     const sortBy = document.querySelector('select[name="sort_by"]').value;
+//     const searchInput = document.querySelector('#search-input');
+
+//     const url = new URL(window.location.href);
+//     const params = new URLSearchParams(url.search);
+
+//     if (searchInput && searchInput.value) {
+//         params.set('q', searchInput.value);
+//     }
+
+//     if (sortBy) {
+//         params.set('sort_by', sortBy);
+//     } else {
+//         params.delete('sort_by');
+//     }
+
+//     params.set('page', 1);
+//     url.search = params.toString();
+
+//     fetch('/mens/', {
+//         method: 'GET',
+//         headers: {
+//             'X-Requested-With': 'XMLHttpRequest',
+//         },
+//     })
+//     .then(response => response.json())
+//     .then(data => updateProductGrid(data.products))
+//     .catch(error => {
+//         console.error("Error fetching data:", error);
+//         alert("Something went wrong while fetching products. Please try again.");
+//     });
+// }
+
+// function clearFilter() {
+//     const checkboxes = document.querySelectorAll('.filter-content input[type="checkbox"]');
+//     checkboxes.forEach(checkbox => checkbox.checked = false);
+    
+//     const sortSelect = document.querySelector('select[name="sort_by"]');
+//     if (sortSelect) {
+//         sortSelect.value = sortSelect.options[0].value;
+//     }
+
+//     const grid = document.querySelector('.products-grid');
+//     if (grid) {
+//         grid.style.opacity = '0.5';
+//     }
+
+//     fetch('/mens/', {
+//         headers: {
+//             'X-Requested-With': 'XMLHttpRequest',
+//         }
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         updateProductGrid(data.products);
+//         const url = new URL(window.location.href);
+//         url.search = '';
+//         window.history.pushState({}, '', url);
+//     })
+//     .catch(error => {
+//         console.error('Error fetching products:', error);
+//         if (grid) {
+//             grid.style.opacity = '1';
+//         }
+//     });
+// }
+
+  // ----------------------wishlist-----------------------------------
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.add-to-wishlist').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const url = "{% url 'wishlist:add_to_wishlist' 0 %}".replace("0", productId);
+            const icon = this.querySelector('i');
+            
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Toggle FontAwesome classes
+                    icon.classList.toggle('far');
+                    icon.classList.toggle('fas');
+                    // Update color based on wishlist state
+                    icon.style.color = icon.classList.contains('fas') ? 'red' : 'black';
+                }
+                
+                Toastify({
+                    text: data.message,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "center",
+                    backgroundColor: data.success ? "green" : "red",
+                }).showToast();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+});
+
+// Initial state setup for wishlist icons
+function initializeWishlistState() {
+    document.querySelectorAll('.add-to-wishlist').forEach(button => {
+        const icon = button.querySelector('i');
+        if (icon.classList.contains('fas')) {  // If item is in wishlist
+            icon.style.color = 'red';
+        } else {
+            icon.style.color = 'black';
+        }
+    });
+}
+
+// Call this when page loads
+document.addEventListener('DOMContentLoaded', initializeWishlistState);
+
+
+
+// ----------------sorting------------------------------------------------------------
+function applySorting() {
+    const sortBy = document.querySelector('select[name="sort_by"]').value;
+    const searchInput = document.querySelector('#search-input');
+
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+
+    if (searchInput && searchInput.value) {
+        params.set('q', searchInput.value);
+    }
+
+    if (sortBy) {
+        params.set('sort_by', sortBy);
+    } else {
+        params.delete('sort_by');
+    }
+
+    params.set('page', 1);
+    url.search = params.toString();
+
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const productsContainer = document.querySelector('.products-grid');
+
+        if (!productsContainer) {
+            console.error("Products container not found");
+            return;
+        }
+
+        productsContainer.innerHTML = data.products.map(product => {
+            const imageUrl = product.primary_image_url || '/static/images/default-image.jpg';
+            const wishlistIconClass = product.in_wishlist ? 'fas' : 'far';
+            const iconColor = product.in_wishlist ? 'red' : 'black';
+            
+            return `
+                <div class="product-card">
+                    ${product.offer_discount > 0 ? 
+                        `<p class="offer_discount">${product.offer_discount}% off</p>` : ''}
+                    <a href="/product/${product.id}" style="text-decoration: none;">
+                        <img src="${imageUrl}" alt="${product.name}" class="product-image">
+                        <h3>${product.name}</h3>
+                        <p class="price">
+                            ${product.discounted_price && product.discounted_price < product.price ?
+                                `<span class="original-price" style="text-decoration: line-through; color: grey;">
+                                    ₹ ${product.price}
+                                </span>
+                                <span class="discounted-price" style="color: red; font-weight: bold;">
+                                    ₹ ${product.discounted_price}
+                                </span>` :
+                                `₹ ${product.price}`}
+                        </p>
+                    </a>
+                    <div class="dial-colors">
+                        ${product.dial_colors.map(color => 
+                            `<span class="color-circle" style="background-color: ${color};"></span>`
+                        ).join('')}
+                    </div>
+                    <button 
+                        class="btn add-to-wishlist" 
+                        data-product-id="${product.id}" 
+                        style="background: transparent; border: none; cursor: pointer;">
+                        <i class="${wishlistIconClass} fa-heart" style="font-size: 20px; color: ${iconColor};"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        // Remove existing event listeners before reattaching
+        const existingButtons = document.querySelectorAll('.add-to-wishlist');
+        existingButtons.forEach(button => {
+            button.replaceWith(button.cloneNode(true));
+        });
+
+        // Attach new event listeners
+        attachWishlistListeners();
+    })
+    .catch(error => {
+        console.error("Error fetching data:", error);
+        alert("Something went wrong while fetching products. Please try again.");
+    });
+}
+
+// Updated wishlist event listeners
+function attachWishlistListeners() {
+    document.querySelectorAll('.add-to-wishlist').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productId = this.dataset.productId;
+            const url = `/wishlist/add/${productId}/`;
+            const icon = this.querySelector('i');
+            
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    icon.classList.toggle('far');
+                    icon.classList.toggle('fas');
+                    // Toggle color between red and black
+                    icon.style.color = icon.classList.contains('fas') ? 'red' : 'black';
+                }
+                
+                Toastify({
+                    text: data.message,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "center",
+                    backgroundColor: data.success ? "green" : "red",
+                }).showToast();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Remove any existing event listeners
+    const existingButtons = document.querySelectorAll('.add-to-wishlist');
+    existingButtons.forEach(button => {
+        button.replaceWith(button.cloneNode(true));
+    });
+
+    // Attach new event listeners
+    attachWishlistListeners();
+    
+    const sortSelect = document.querySelector('select[name="sort_by"]');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', applySorting);
+    }
+});
+
+// -----------------------------clear filter---------------------------------------------------
+
+
+
+function toggleFilter(header) {
+    const filterGroup = header.parentElement;
+    filterGroup.classList.toggle('active');
+}
+
+function clearFilter() {
+    // Uncheck all checkboxes
+    const checkboxes = document.querySelectorAll('.filter-content input[type="checkbox"]');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    
+    // Reset sort dropdown if it exists
+    const sortSelect = document.querySelector('select[name="sort_by"]');
+    if (sortSelect) {
+        sortSelect.value = sortSelect.options[0].value;
+    }
+
+    // Show loading state
+    const grid = document.querySelector('.products-grid');
+    if (grid) {
+        grid.style.opacity = '0.5';
+    }
+
+    // Fetch all products
+    fetch('/home/', {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateProductGrid(data.products);
+        // Reset URL parameters
+        const url = new URL(window.location.href);
+        url.search = '';
+        window.history.pushState({}, '', url);
+    })
+    .catch(error => {
+        console.error('Error fetching products:', error);
+        if (grid) {
+            grid.style.opacity = '1';
+        }
+    });
+}
+
+function updateProductGrid(products) {
+    const grid = document.querySelector('.products-grid');
+    grid.innerHTML = '';
+    grid.style.opacity = '1';
+
+    if (products.length === 0) {
+        grid.innerHTML = '<p>No products available.</p>';
+        return;
+    }
+
+    products.forEach(product => {
+        const productCard = document.createElement('div');
+        productCard.classList.add('product-card');
+        
+        const imageUrl = product.primary_image_url || '/static/images/default-image.jpg';
+        const wishlistIconClass = product.in_wishlist ? 'fas' : 'far';
+        const iconColor = product.in_wishlist ? 'red' : 'black';
+
+        productCard.innerHTML = `
+            ${product.offer_discount > 0 ? 
+                `<p class="offer_discount">${product.offer_discount}% off</p>` : ''}
+            <a href="/product/${product.id}" style="text-decoration: none;">
+                <img src="${imageUrl}" alt="${product.name}" class="product-image">
+                <h3>${product.name}</h3>
+                <p class="price">
+                    ${product.discounted_price && product.discounted_price < product.price ?
+                        `<span class="original-price" style="text-decoration: line-through; color: grey;">
+                            ₹ ${product.price}
+                        </span>
+                        <span class="discounted-price" style="color: red; font-weight: bold;">
+                            ₹ ${product.discounted_price}
+                        </span>` :
+                        `₹ ${product.price}`}
+                </p>
+            </a>
+            <div class="dial-colors">
+                ${product.dial_colors ? 
+                    product.dial_colors.map(color => 
+                        `<span class="color-circle" style="background-color: ${color};"></span>`
+                    ).join('') : ''}
+            </div>
+            <button 
+                class="btn add-to-wishlist" 
+                data-product-id="${product.id}" 
+                style="background: transparent; border: none; cursor: pointer;">
+                <i class="${wishlistIconClass} fa-heart" style="font-size: 20px; color: ${iconColor};"></i>
+            </button>
+        `;
+
+        grid.appendChild(productCard);
+    });
+
+    // Reattach wishlist event listeners after updating the grid
+    attachWishlistListeners();
+}
+
+
+    // ----------------------------------pagination---------------------------------------------------------
+    function fetchPage(pageNumber) {
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+
+    // Set the page number
+    params.set('page', pageNumber);
+
+    // Preserve sort_by
+    const sortBy = document.querySelector('select[name="sort_by"]').value || params.get('sort_by');
+    if (sortBy) params.set('sort_by', sortBy);
+
+    // Preserve search query
+    const searchQuery = document.querySelector('#search-input').value || params.get('q');
+    if (searchQuery) params.set('q', searchQuery);
+
+    url.search = params.toString();
+
+    // Fetch updated data
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const productsContainer = document.querySelector('.products-grid');
+        productsContainer.innerHTML = data.products.map(product => {
+            const imageUrl = product.primary_image_url || '/static/images/default-image.jpg';
+            const wishlistIconClass = product.in_wishlist ? 'fas' : 'far';
+
+            return `
+                <div class="product-card">
+                    ${product.offer_discount > 0 ? `<p class="offer_discount">${product.offer_discount}% off</p>` : ''}
+                    <a href="/product/${product.id}" style="text-decoration: none;">
+                        <img src="${imageUrl}" alt="${product.name}" class="product-image">
+                        <h3>${product.name}</h3>
+                        <p class="price">
+                            ${product.discounted_price && product.discounted_price < product.price
+                                ? `<span class="original-price" style="text-decoration: line-through; color: grey;">₹ ${product.price}</span>
+                                   <span class="discounted-price" style="color: red; font-weight: bold;">₹ ${product.discounted_price}</span>`
+                                : `₹ ${product.price}`}
+                        </p>
+                    </a>
+                </div>
+            `;
+        }).join('');
+
+        const paginationContainer = document.querySelector('.pagination');
+        paginationContainer.innerHTML = `
+            ${data.has_previous 
+                ? `<a href="javascript:void(0);" onclick="fetchPage(${data.current_page - 1})">Previous</a>` 
+                : ''}
+            <span>Page ${data.current_page} of ${data.total_pages}</span>
+            ${data.has_next 
+                ? `<a href="javascript:void(0);" onclick="fetchPage(${data.current_page + 1})">Next</a>` 
+                : ''}
+        `;
+    })
+    .catch(error => {
+        console.error("Error fetching page:", error);
+    });
+}
+
+</script>
+
+{% endblock %}
