@@ -335,10 +335,18 @@
                     <a href="{% url 'orders:orders_list' %}" style="text-decoration: none; color: inherit;">
                         <div>Orders</div>
                     </a>
-                    <div>Wishlist</div>
+                    <a href="{% url 'wishlist:view_wishlist'  %}" style="text-decoration: none; color: inherit;">
+                        <div>Wishlist</div> 
+                    </a>
+                    {% if user.is_authenticated %}
                     <a href="{% url 'logout' %}" style="text-decoration: none; color: inherit;">
                         <div>Logout</div>
                     </a>
+                    {% else %}
+                    <a href="{% url 'login' %}" style="text-decoration: none; color: inherit;">
+                        <div>Login</div>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

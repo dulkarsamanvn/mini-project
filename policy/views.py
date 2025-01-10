@@ -12,21 +12,21 @@ from wishlist.models import Wishlist
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.
-@login_required
+@login_required(login_url= 'login')
 def repair_and_service(request):
     return render(request,'repair_and_service.html')
 
 
-@login_required
+@login_required(login_url= 'login')
 def stores(request):
     return render(request,'stores.html')
 
 
-@login_required
+@login_required(login_url= 'login')
 def available_brands(request):
     return render(request,'available_brands.html')
 
-@login_required
+@login_required(login_url= 'login')
 def mens_page(request):
 
     categories = Category.objects.filter(is_listed=True)
@@ -164,7 +164,7 @@ def mens_page(request):
     return render(request, 'mens_page.html', context)
 
 
-@login_required
+@login_required(login_url= 'login')
 def womens_page(request):
     categories=Category.objects.filter(is_listed=True)
     brands=Brand.objects.filter(is_listed=True)
@@ -296,6 +296,6 @@ def womens_page(request):
 
 
 
-@login_required
+@login_required(login_url= 'login')
 def offer_page(request):
     return render(request,'offer_page.html')

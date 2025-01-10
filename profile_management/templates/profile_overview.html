@@ -193,11 +193,14 @@
 
             <!-- Cards Grid -->
             <div class="cards-grid">
-                <div class="card">
-                    <div class="card-icon">📦</div>
-                    <h3>Orders</h3>
-                    <p>Check your order status</p>
-                </div>
+                <a href="{% url 'orders:orders_list' %}" style="text-decoration: none;">
+                    <div class="card">
+                        <div class="card-icon">📦</div>
+                        <h3>Orders</h3>
+                        <p>Check your order status</p>
+                    </div>
+                </a>
+                
                 <a href="{% url 'profile_management:address_list' %}" style="text-decoration: none;">
                     <div class="card">
                         <div class="card-icon">📍</div>

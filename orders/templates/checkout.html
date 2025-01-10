@@ -357,7 +357,7 @@
                         <li class="coupon-item">
                             <strong>{{ coupon.code }}</strong>Discount: {{ coupon.discount_percentage|floatformat:2 }}%
                         </li>
-                        <li> Expires: {{ coupon.valid_until|date:"d M Y" }}</li>
+                        <!-- <li> Expires: {{ coupon.valid_until|date:"d M Y" }}</li> -->
                     {% endfor %}
                 </ul>
             {% else %}

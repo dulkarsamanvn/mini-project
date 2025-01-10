@@ -4,6 +4,7 @@
 <head>
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- <title>TISSOT T129407220300 Classic Dream Swissmatic Men's Watch</title> -->
@@ -35,6 +36,8 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .product-images {
@@ -42,13 +45,13 @@
             gap: 10px;
         }
 
-        .main-image {
+        /* .main-image {
             width: 100%;
             aspect-ratio: 1 / 1;
             object-fit: cover;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-        }
+        } */
 
         .thumbnail-grid {
             display: grid;
@@ -235,32 +238,70 @@
 
         .main-image-container {
             position: relative;
-            overflow: hidden;
+            width: 100%;
+            height: 500px;
+            border: 1px solid #e0e0e0;
             cursor: zoom-in;
+        }
+
+        .main-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .zoomed-image-container {
             position: absolute;
             top: 0;
-            left: 100%;
-            width: 100%;
-            height: 100%;
+            left: calc(100% + 10px); /* Reduced gap to 10px */
+            width: 300px;  /* Smaller fixed width */
+            height: 300px; /* Smaller fixed height */
+            overflow: hidden;
             display: none;
             border: 1px solid #e0e0e0;
-            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Added subtle shadow */
         }
 
         .zoomed-image {
-            width: 200%;
-            height: 200%;
-            background-repeat: no-repeat;
-            background-size: cover;
             position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 400%; /* Increased zoom level for smaller container */
         }
 
         .color-circle.active {
             border: 2px solid #000;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .add-to-wishlist {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: white; /* Adding white background */
+            border: 2px solid #e0e0e0; /* Adding border */
+            border-radius: 50%; /* Making it circular */
+            cursor: pointer;
+            width: 40px; /* Fixed width */
+            height: 40px; /* Fixed height */
+            display: flex; /* For centering the icon */
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.3s ease; /* Smooth transition for hover effects */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional: adds subtle shadow */
+        }
+        .add-to-wishlist:hover {
+            transform: scale(1.1); /* Optional: slight grow effect on hover */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Optional: increased shadow on hover */
+        }
+
+        .add-to-wishlist i {
+            font-size: 20px;
         }
     </style>
 </head>
@@ -274,11 +315,18 @@
         <div class="product-grid">
             <div class="product-images">
                 <div class="main-image-container">
-                    <img id="main-image" src="{{ primary_variant_images.0.image.url }}" alt="{{ product.name }}"
-                        class="main-image">
+                    <img id="main-image" src="{{ primary_variant_images.0.image.url }}" alt="{{ product.name }}" class="main-image">
                     <div class="zoomed-image-container">
                         <div class="zoomed-image"></div>
                     </div>
+                    <!-- ------------------------------------------------------- -->
+                    <button 
+                        class="btn add-to-wishlist" 
+                        data-product-id="{{ product.id }}" 
+                        style="background: transparent; border: none; cursor: pointer;">
+                        <i class="{% if product.in_wishlist %}fas{% else %}far{% endif %} fa-heart" style="font-size: 20px;"></i>
+                    </button>
+                    <!-- ------------------------------------------------------- -->
                 </div>
                 <div class="thumbnail-grid">
                     {% for image in primary_variant_images %}
@@ -368,26 +416,21 @@
         <div class="similar-products">
             <h2>YOU MAY ALSO LIKE</h2>
             <div class="product-grid-4">
-                <div class="similar-product">
-                    <img src="https://placeholder.com/200x200" alt="Similar Watch 1">
-                    <p>TISSOT T-SPORT CHRONO XL CLASSIC CHRONOGRAPH MEN WATCH</p>
-                    <p>₹ 49,000.00</p>
-                </div>
-                <div class="similar-product">
-                    <img src="https://placeholder.com/200x200" alt="Similar Watch 2">
-                    <p>TISSOT T-SPORT CHRONO XL CLASSIC CHRONOGRAPH MEN WATCH</p>
-                    <p>₹ 48,000.00</p>
-                </div>
-                <div class="similar-product">
-                    <img src="https://placeholder.com/200x200" alt="Similar Watch 3">
-                    <p>TISSOT CARSON PREMIUM CHRONOGRAPH MEN WATCH</p>
-                    <p>₹ 44,000.00</p>
-                </div>
-                <div class="similar-product">
-                    <img src="https://placeholder.com/200x200" alt="Similar Watch 4">
-                    <p>TISSOT CARSON PREMIUM CHRONOGRAPH MEN WATCH</p>
-                    <p>₹ 44,000.00</p>
-                </div>
+                {% for similar_product in similar_products %}
+                <a href="{% url 'product:product_detail' similar_product.pk %}" style="text-decoration: none; color: black;">
+                    <div class="similar-product">
+                        <img src="{{ similar_product.variants.first.images.first.image.url }}" alt="{{ similar_product.name }}">
+                        <p>{{ similar_product.name }}</p>
+                        <span style="text-decoration: line-through; color: grey;">₹ {{ similar_product.variants.first.price }}</span>
+                        <span >₹ {{ similar_product.variants.first.get_discounted_price }}</span>
+
+                    </div>
+                </a>
+                
+                {% empty %}
+                    <p>No similar products found.</p>
+                {% endfor %}
+               
             </div>
         </div>
 
@@ -419,31 +462,78 @@
         <div class="faq">
             <div class="faq-item">
                 <div class="faq-question">Luxe Tickers</div>
-                <div class="faq-answer">Information about Luxe Tickers...</div>
+                <div class="faq-answer"> Luxe Tickers is a premier destination for luxury timepieces, bringing an exceptional collection of internationally renowned watch brands to discerning customers. Our mission is to blend the precision and artistry of world-class watchmaking with an elevated shopping experience that exudes sophistication and quality.</div>
             </div>
             <div class="faq-item">
                 <div class="faq-question">What is the delivery Time</div>
-                <div class="faq-answer">Delivery time information...</div>
+                <div class="faq-answer">The Product will be shipped in 15 days and will be dispatched after 10 days.</div>
             </div>
             <div class="faq-item">
                 <div class="faq-question">How Brands are available at the Luxe Tickers</div>
-                <div class="faq-answer">Available brands information...</div>
+                <div class="faq-answer">40+ Brands are available</div>
             </div>
             <div class="faq-item">
                 <div class="faq-question">How can I contact Customer Service</div>
-                <div class="faq-answer">Customer service contact information...</div>
+                <div class="faq-answer">Customer service contact information are available.</div>
             </div>
             <div class="faq-item">
                 <div class="faq-question">Do you have Physical stores</div>
-                <div class="faq-answer">Physical store information...</div>
+                <div class="faq-answer">Yes, Physical Stores are available .</div>
             </div>
         </div>
     </div>
 
     <script>
+        // ------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', function() {
+            const wishlistButton = document.querySelector('.add-to-wishlist');
+            if (wishlistButton) {
+                wishlistButton.addEventListener('click', function() {
+                    const productId = this.dataset.productId;
+                    const url = `/wishlist/add/${productId}/`;
+                    const icon = this.querySelector('i');
+                    
+                    fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Toggle FontAwesome classes
+                            icon.classList.toggle('far');
+                            icon.classList.toggle('fas');
+                            // Update color based on wishlist state
+                            icon.style.color = icon.classList.contains('fas') ? 'red' : 'black';
+                        }
+                        
+                        Toastify({
+                            text: data.message,
+                            duration: 3000,
+                            close: true,
+                            gravity: "top",
+                            position: "center",
+                            backgroundColor: data.success ? "green" : "red",
+                        }).showToast();
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            }
+
+            // Set initial color of wishlist icon
+            const icon = wishlistButton?.querySelector('i');
+            if (icon) {
+                icon.style.color = icon.classList.contains('fas') ? 'red' : 'black';
+            }
+        });
+        // ------------------------------------------------------
         function changeMainImage(url) {
             const mainImage = document.getElementById('main-image');
+            const zoomedImage = document.querySelector('.zoomed-image');
             mainImage.src = url;
+            zoomedImage.style.backgroundImage = `url(${url})`;
         }
         function changeVariant(dialColor, variantId) {
             fetch(`?dial_color=${dialColor}`, {
@@ -521,48 +611,50 @@
 
         // Image Zoom Functionality
         document.addEventListener('DOMContentLoaded', () => {
-            const mainImageContainer = document.querySelector('.main-image-container');
-            const mainImage = document.getElementById('main-image');
-            const zoomedImageContainer = document.querySelector('.zoomed-image-container');
-            const zoomedImage = document.querySelector('.zoomed-image');
+        const mainImageContainer = document.querySelector('.main-image-container');
+        const mainImage = document.getElementById('main-image');
+        const zoomedImageContainer = document.querySelector('.zoomed-image-container');
+        const zoomedImage = document.querySelector('.zoomed-image');
 
-            mainImageContainer.addEventListener('mouseenter', () => {
+        let isZooming = false;
+
+        mainImageContainer.addEventListener('mouseenter', () => {
+            if (mainImage.complete) { // Check if image is loaded
+                isZooming = true;
                 zoomedImageContainer.style.display = 'block';
-            });
-
-            mainImageContainer.addEventListener('mousemove', (e) => {
-                const containerRect = mainImageContainer.getBoundingClientRect();
-                const x = e.clientX - containerRect.left;
-                const y = e.clientY - containerRect.top;
-
-                // Calculate percentage positions
-                const xPercent = (x / containerRect.width) * 100;
-                const yPercent = (y / containerRect.height) * 100;
-
-                // Set zoomed image background
-                zoomedImage.style.backgroundImage = `url(${mainImage.src})`;
-                zoomedImage.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
-            });
-
-            mainImageContainer.addEventListener('mouseleave', () => {
-                zoomedImageContainer.style.display = 'none';
-            });
-
-            // Color circle selection
-            const colorCircles = document.querySelectorAll('.color-circle');
-            colorCircles.forEach(circle => {
-                circle.addEventListener('click', () => {
-                    // Remove active class from all color circles
-                    colorCircles.forEach(c => c.classList.remove('active'));
-                    // Add active class to clicked circle
-                    circle.classList.add('active');
-
-                    // Fetch variant details based on the selected color
-                    const dialColor = circle.dataset.dialColor;
-                    changeVariant(dialColor);
-                });
-            });
+                updateZoomedImage(event);
+            }
         });
+
+        mainImageContainer.addEventListener('mousemove', (event) => {
+            if (isZooming) {
+                updateZoomedImage(event);
+            }
+        });
+
+        mainImageContainer.addEventListener('mouseleave', () => {
+            isZooming = false;
+            zoomedImageContainer.style.display = 'none';
+        });
+
+        function updateZoomedImage(event) {
+            const rect = mainImageContainer.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const xPercent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+            const yPercent = Math.max(0, Math.min(100, (y / rect.height) * 100));
+
+            // Update zoomed image
+            zoomedImage.style.backgroundImage = `url(${mainImage.src})`;
+            zoomedImage.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
+        }
+
+        // Handle image loading
+        mainImage.addEventListener('load', () => {
+            zoomedImage.style.backgroundImage = `url(${mainImage.src})`;
+        });
+    });
 
         // Simple tab functionality
         document.addEventListener('DOMContentLoaded', () => {

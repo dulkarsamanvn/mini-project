@@ -21,6 +21,19 @@ from datetime import date
 from django.http import JsonResponse
 from offer_management.models import Offer
 from decimal import Decimal
+from django.core.paginator import Paginator
+from django.db.models import OuterRef, Subquery, Q
+from django.db.models import Subquery, OuterRef, F, Q, DecimalField
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.shortcuts import render
+from datetime import date
+from decimal import Decimal
+from category.models import Category
+from brand.models import Brand
+from offer_management.models import Offer
+from product.models import Product, ProductVariant, ProductVariantImage
+
 
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -381,19 +394,6 @@ from wishlist.models import Wishlist
 
 # -------------------------------------------------------------------------------------------
 
-from django.core.paginator import Paginator
-from django.db.models import OuterRef, Subquery, Q
-from django.db.models import Subquery, OuterRef, F, Q, DecimalField
-from django.core.paginator import Paginator
-from django.http import JsonResponse
-from django.shortcuts import render
-from datetime import date
-from decimal import Decimal
-from category.models import Category
-from brand.models import Brand
-from offer_management.models import Offer
-from product.models import Product, ProductVariant, ProductVariantImage
-
 
 def home_view(request):
     categories = Category.objects.filter(is_listed=True)
@@ -415,7 +415,7 @@ def home_view(request):
     products = Product.objects.annotate(
         primary_variant_id=Subquery(primary_variant_subquery),
         primary_variant_price=Subquery(primary_variant_price_subquery, output_field=DecimalField(max_digits=10, decimal_places=2))
-    ).filter(primary_variant_id__isnull=False)
+    ).filter(primary_variant_id__isnull=False,is_listed=True)
 
     # Get query parameters
     sort_by = request.GET.get('sort_by')
@@ -494,13 +494,13 @@ def home_view(request):
         category_offer = Offer.objects.filter(
             offer_type='category',
             category=product.category,
-            end_date__gte=today
+            end_date__gte=today,is_listed=True
         ).order_by('-discount').first()
         
         product_offer = Offer.objects.filter(
             offer_type='product',
             product=product,
-            end_date__gte=today
+            end_date__gte=today,is_listed=True
         ).order_by('-discount').first()
 
         if category_offer:

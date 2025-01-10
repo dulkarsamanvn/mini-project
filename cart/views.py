@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 #     cart_items=CartItem.objects.filter(user=request.user)
 #     total_amount=sum(item.total_amount for item in cart_items)
 #     return render(request, 'cart.html', {'cart_items': cart_items, 'total_amount': total_amount})
-@login_required
+@login_required(login_url= 'login')
 def cart_view(request):
     cart_items = CartItem.objects.filter(user=request.user)
 

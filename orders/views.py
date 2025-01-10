@@ -28,36 +28,53 @@ import logging
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from razorpay.errors import BadRequestError, SignatureVerificationError, ServerError
 import razorpay
+from orders.models import OrderItemReturn
+from reportlab.pdfgen import canvas
+from io import BytesIO
+from django.http import HttpResponse
 
-# Create your views here.
+@login_required
 def checkout(request):
-    default_address = Address.objects.filter(user=request.user, is_default=True).first()
-    address = Address.objects.filter(user=request.user)
-    cart_items = CartItem.objects.filter(user=request.user)
+    try:
+        # Ensure wallet exists
+        try:
+            wallet = Wallet.objects.get(user=request.user)
+        except Wallet.DoesNotExist:
+            wallet = Wallet.objects.create(user=request.user, balance=Decimal('0.00'))
 
-    # Calculate the cart total using discounted prices
-    cart_total = sum(item.quantity * (
-        item.product_variant.get_discounted_price() if hasattr(item.product_variant, 'get_discounted_price') else item.product_variant.price
-    ) for item in cart_items)
+        # Retrieve default address and cart items
+        default_address = Address.objects.filter(user=request.user, is_default=True).first()
+        address = Address.objects.filter(user=request.user)
+        cart_items = CartItem.objects.filter(user=request.user)
 
-    # Retrieve any active coupons
-    coupons = Coupon.objects.filter(is_active=True)
+        # Calculate cart total
+        cart_total = sum(
+            item.quantity * (
+                item.product_variant.get_discounted_price() if hasattr(item.product_variant, 'get_discounted_price') else item.product_variant.price
+            ) for item in cart_items
+        )
 
-    # Include discount details from the session if a coupon has been applied
-    discount_amount = request.session.get('discount_amount', 0.00)
-    final_total = cart_total - Decimal(discount_amount)
+        # Retrieve active coupons
+        coupons = Coupon.objects.filter(is_active=True,is_listed=True)
 
-    context = {
-        'default_address': default_address,
-        'cart_total': cart_total,
-        'address': address,
-        'coupons': coupons,
-        'discount_amount': discount_amount,
-        'final_total': final_total
-    }
-    return render(request, 'checkout.html', context)
+        # Retrieve discount from session
+        discount_amount = Decimal(request.session.get('discount_amount', 0.00))
+        final_total = max(cart_total - discount_amount, Decimal('0.00'))
 
+        context = {
+            'default_address': default_address,
+            'cart_total': cart_total,
+            'address': address,
+            'coupons': coupons,
+            'discount_amount': discount_amount,
+            'final_total': final_total,
+            'wallet_balance': wallet.balance
+        }
+        return render(request, 'checkout.html', context)
 
+    except Exception as e:
+        messages.error(request, f"An error occurred: {e}")
+        return redirect('cart:view')
 
 @csrf_exempt
 def apply_coupon(request):
@@ -66,19 +83,31 @@ def apply_coupon(request):
             data = json.loads(request.body)
             coupon_code = data.get('coupon_code', '').strip()
 
+            if not request.user.is_authenticated:
+                return JsonResponse({'error': 'User not authenticated.'}, status=403)
+
             # Get the cart items for the user
             cart_items = CartItem.objects.filter(user=request.user)
             if not cart_items.exists():
                 return JsonResponse({'error': 'Your cart is empty.'}, status=400)
 
             # Calculate the total amount considering existing discounts
-            total_amount = sum(item.quantity * (
-                item.product_variant.get_discounted_price() if hasattr(item.product_variant, 'get_discounted_price') else item.product_variant.price
-            ) for item in cart_items)
+            total_amount = sum(
+                item.quantity * (
+                    item.product_variant.get_discounted_price() 
+                    if hasattr(item.product_variant, 'get_discounted_price') 
+                    else item.product_variant.price
+                ) for item in cart_items
+            )
 
             # Fetch the coupon
             try:
-                coupon = Coupon.objects.get(code=coupon_code, is_active=True)
+                coupon = Coupon.objects.get(
+                    code=coupon_code, 
+                    is_active=True, 
+                    valid_from__lte=now().date(), 
+                    valid_until__gte=now().date()
+                )
             except Coupon.DoesNotExist:
                 return JsonResponse({'error': 'Invalid or expired coupon.'}, status=400)
 
@@ -87,7 +116,18 @@ def apply_coupon(request):
 
             # Save coupon details in the session
             request.session['coupon_code'] = coupon_code
-            request.session['discount_amount'] = float(discount_amount)  # Convert to float for JSON serialization
+            request.session['discount_amount'] = float(discount_amount)
+
+            # Apply proportional discount to each item
+            for item in cart_items:
+                item_total = item.quantity * (
+                    item.product_variant.get_discounted_price() 
+                    if hasattr(item.product_variant, 'get_discounted_price') 
+                    else item.product_variant.price
+                )
+                proportional_discount = (item_total / total_amount) * discount_amount
+                item.applied_discount = proportional_discount
+                item.save()
 
             # Return success response
             return JsonResponse({
@@ -102,8 +142,63 @@ def apply_coupon(request):
         return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 
+# @csrf_exempt
+# def apply_coupon(request):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#             coupon_code = data.get('coupon_code', '').strip()
+
+#             # Get the cart items for the user
+#             cart_items = CartItem.objects.filter(user=request.user)
+#             if not cart_items.exists():
+#                 return JsonResponse({'error': 'Your cart is empty.'}, status=400)
+
+#             # Calculate the total amount considering existing discounts
+#             total_amount = sum(item.quantity * (
+#                 item.product_variant.get_discounted_price() if hasattr(item.product_variant, 'get_discounted_price') else item.product_variant.price
+#             ) for item in cart_items)
+
+#             # Fetch the coupon
+#             try:
+#                 coupon = Coupon.objects.get(code=coupon_code, is_active=True)
+#             except Coupon.DoesNotExist:
+#                 return JsonResponse({'error': 'Invalid or expired coupon.'}, status=400)
+
+#             # Calculate discount
+#             discount_amount = (coupon.discount_percentage / 100) * total_amount
+
+#             # Save coupon details in the session
+#             request.session['coupon_code'] = coupon_code
+#             request.session['discount_amount'] = float(discount_amount)  # Convert to float for JSON serialization
 
 
+
+#             for item in cart_items:
+#                 item_total = item.quantity * (
+#                     item.product_variant.get_discounted_price() 
+#                     if hasattr(item.product_variant, 'get_discounted_price') 
+#                     else item.product_variant.price
+#                 )
+#                 proportional_discount = (item_total / total_amount) * discount_amount
+#                 item.applied_discount = proportional_discount
+#                 item.save()
+
+#             # Return success response
+#             return JsonResponse({
+#                 'success': True,
+#                 'discount': discount_amount,
+#                 'new_total': total_amount - discount_amount
+#             })
+
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid JSON format.'}, status=400)
+#     else:
+#         return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+
+
+@login_required
 def place_order(request):
     # Retrieve cart items
     cart_items = CartItem.objects.filter(user=request.user)
@@ -229,7 +324,8 @@ def place_order(request):
                 return redirect('orders:order_confirmation', order_id=order.id)
 
             elif payment_method == 'wallet':
-                
+                order.order_status='CONFIRMED'
+                order.save()
                 messages.success(request, "Order placed successfully using wallet balance!")
                 return redirect('orders:order_confirmation', order_id=order.id)
 
@@ -323,77 +419,17 @@ def razorpay_payment(request, order_id):
     })
 
 
-# def razorpay_payment(request, order_id):
-#     order = get_object_or_404(Order, id=order_id, user=request.user)
-    
-#     if order.payment_method != 'razorpay':
-#         messages.error(request, "Invalid payment method.")
-#         return redirect('orders:checkout')
-
-#     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-    
-#     try:
-#         razorpay_order = client.order.fetch(order.razorpay_order_id)
-#         print("Razorpay order fetched:", razorpay_order)  # Debug log
-#     except razorpay.errors.BadRequestError as e:
-#         print(f"Error fetching Razorpay order: {e}")  # Debug log
-#         messages.error(request, "Failed to fetch Razorpay order.")
-#         return redirect('orders:checkout')
-
-#     # Check if payment is being submitted via POST or simply rendering the page
-#     if request.method == 'POST':
-#         payment_id = request.POST.get('razorpay_payment_id')
-#         signature = request.POST.get('razorpay_signature')
-#         print("Razorpay Signature:", request.POST.get('razorpay_signature'))
-        
-#         # Verify the payment signature
-#         try:
-#             client.utility.verify_payment_signature({
-#                 'razorpay_order_id': razorpay_order['id'],
-#                 'razorpay_payment_id': payment_id,
-#                 'razorpay_signature': signature,
-#             })
-            
-#             # Payment verified successfully, update the order status
-#             order.razorpay_payment_status = 'PAID'
-#             # order.order_status = 'PENDING'
-#             order.razorpay_payment_id = payment_id
-#             order.razorpay_signature = signature
-#             order.save()
-
-#             # Empty the cart after payment success
-#             CartItem.objects.filter(user=request.user).delete()
-
-#             # Return a success message
-#             messages.success(request, "Payment successful! Order confirmed.")
-#             return redirect('orders:order_confirmation', order_id=order.id)
-
-#         except razorpay.errors.SignatureVerificationError:
-#             order.razorpay_payment_status='PENDING'
-#             order.save()
-#             messages.error(request, "Payment verification failed.")
-#             return redirect('orders:razorpay_payment',order_id=order.id)
-#             # return redirect('orders:checkout')
-
-#     # If not POST request, render the Razorpay payment page
-#     return render(request, 'razorpay_payment.html', {
-#         'order': order,
-#         'razorpay_order_id': razorpay_order['id'],
-#         'razorpay_amount': razorpay_order['amount'],
-#         'razorpay_currency': razorpay_order['currency'],
-#     })
-
-
-
 # -------------------------------------------------------------
 
 
-@login_required
+@login_required(login_url= 'login')
 def orders_list(request):
     orders=Order.objects.filter(user=request.user).order_by('-order_date')
     reasons = ReturnReason.objects.all()
     return render(request,'orders_list.html',{'orders':orders,'reasons':reasons})
 
+
+@login_required
 def order_items(request,order_id):
     order=get_object_or_404(Order,id=order_id,user=request.user)
     order_items = OrderItem.objects.filter(order=order).select_related('product_variant__product').prefetch_related(
@@ -406,6 +442,7 @@ def order_items(request,order_id):
 
 logger = logging.getLogger(__name__)
 
+@login_required
 def cancel_order(request, order_id):
     try:
         order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -544,169 +581,215 @@ def admin_order_list(request):
     return render(request, 'admin_order_list.html', {'orders': orders_page})
 
 
+
+
+# --------------------------------------group return------------------------------------------------------------
+
+
+# def return_order(request, order_id):
+#     order = get_object_or_404(Order, id=order_id)
+
+#     if order.order_status == 'DELIVERED':  # Only allow return initiation if delivered
+#         if request.method == "POST":
+#             # Create return reason
+#             ReturnReason.objects.create(
+#                 order=order,
+#                 sizing_issues=bool(request.POST.get('sizing_issues')),
+#                 damaged_item=bool(request.POST.get('damaged_item')),
+#                 incorrect_order=bool(request.POST.get('incorrect_order')),
+#                 delivery_delays=bool(request.POST.get('delivery_delays')),
+#                 other_reason=request.POST.get('other_reason', '').strip(),
+#                 approved=False,  # Default value on creation
+#             )
+
+#             # Update order status to 'RETURN_PENDING'
+#             order.order_status = 'RETURN_PENDING'
+#             print(order.order_status)
+#             order.save()  # Ensure status is saved
+
+
+#             print(f"Order {order_id} status updated to {order.order_status}")
+
+#             messages.success(request, "Return initiated successfully.")
+#             return redirect('orders:orders_list')
+#         else:
+#             messages.error(request, "Invalid request.")
+#             return redirect('orders:orders_list')
+#     else:
+#         messages.error(request, f"Cannot initiate return for order {order.id}. Status is {order.get_order_status_display()}.")
+#         return redirect('orders:orders_list')
+
+
+
+
+
+
 # @staff_member_required
-# def admin_order_list(request):
-#     orders = Order.objects.all().order_by('-order_date')
+# def manage_returns(request):
+#     # Fetch the pending and approved return requests
+#     pending_returns = ReturnReason.objects.filter(
+#         order__order_status__in=['RETURN_PENDING', 'RETURNED'],
+#         approved=False
+#     ).order_by('-created_at')
 
-#     if request.method == 'POST':
-#         order_id = request.POST.get('order_id')
-#         new_status = request.POST.get('order_status')
+#     approved_returns = ReturnReason.objects.filter(
+#         order__order_status__in=['RETURN_PENDING', 'RETURNED'],
+#         approved=True
+#     ).order_by('-created_at')
 
-#         try:
-#             if order_id and new_status and new_status in dict(Order.ORDER_STATUS_CHOICES):
-#                 order = get_object_or_404(Order, id=order_id)
+#     paginator = Paginator(approved_returns, 5)
+#     page_number = request.GET.get('page')
+#     page_obj = paginator.get_page(page_number)
 
-#                 # Check if the status is being updated to 'CANCELED'
-#                 if new_status == 'CANCELED' and order.order_status != 'CANCELED':
-#                     with transaction.atomic():
-#                         # Process refund for Razorpay or Wallet payments
-#                         if order.payment_method in ['razorpay', 'wallet']:
-#                             wallet = Wallet.objects.get(user=order.user)
-
-#                             # Refund for Razorpay payments
-#                             if order.payment_method == 'razorpay':
-#                                 if order.razorpay_payment_id:
-#                                     client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
-#                                     client.payment.refund(order.razorpay_payment_id, {
-#                                         "amount": int(order.total_amount * 100)  # Refund amount in paise
-#                                     })
-
-#                             # Refund to Wallet
-#                             wallet.credit(order.total_amount, description=f"Refund for canceled order #{order.id}")
-
-#                         # Update the order status
-#                         order.order_status = 'CANCELED'
-#                         order.save()
-
-#                 elif order.order_status == 'CANCELED' and new_status != 'CANCELED':
-#                     messages.error(request, f"Order {order_id} is already canceled and cannot be updated.")
-
-#                 elif order.order_status == 'RETURNED' and new_status != 'RETURNED':
-#                     messages.error(request, f"Order {order_id} is already Returned and cannot be updated.")
-#                 else:
-#                     # For other status updates
-#                     order.order_status = new_status
-#                     order.save()
-
-#                 # Only success message
-#                 messages.success(request, f"Order {order_id} status updated to {new_status}.")
-#             else:
-#                 messages.error(request, "Invalid order ID or status.")
-
-#         except Wallet.DoesNotExist:
-#             messages.error(request, "Wallet not found for this user. Please contact support.")
-#         except Exception as e:
-#             messages.error(request, f"An error occurred while updating the order: {str(e)}")
-
-#     return render(request, 'admin_order_list.html', {'orders': orders})
+#     return render(request, 'manage_returns.html', {
+#         'pending_returns': pending_returns,
+#         'page_obj': page_obj,
+#     })
 
 
 
 
+# @staff_member_required
+# def approve_return(request, return_id):
+#     # Fetch the return request
+#     return_request = get_object_or_404(ReturnReason, id=return_id)
+#     order = return_request.order
 
+#     # Credit the amount back to the user's wallet
+#     try:
+#         wallet = Wallet.objects.get(user=order.user)
+#         wallet.credit(order.total_amount, description=f"Refund for returned order #{order.id}")
+#     except Wallet.DoesNotExist:
+#         messages.error(request, f"No wallet found for user associated with order #{order.id}.")
+#         return redirect('orders:manage_returns')
 
+#     # Restock the quantities of ordered items
+#     for item in order.items.all(): 
+#         product_variant = item.product_variant  
+#         product_variant.quantity += item.quantity
+#         product_variant.status = 'in_stock' if product_variant.quantity > 0 else 'out_of_stock'
+#         product_variant.save()
 
-def return_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
+#     # Update the return request to approved
+#     return_request.approved = True
+#     return_request.save()
 
-    if order.order_status == 'DELIVERED':  # Only allow return initiation if delivered
-        if request.method == "POST":
-            # Create return reason
-            ReturnReason.objects.create(
-                order=order,
-                sizing_issues=bool(request.POST.get('sizing_issues')),
-                damaged_item=bool(request.POST.get('damaged_item')),
-                incorrect_order=bool(request.POST.get('incorrect_order')),
-                delivery_delays=bool(request.POST.get('delivery_delays')),
-                other_reason=request.POST.get('other_reason', '').strip(),
-                approved=False,  # Default value on creation
-            )
+#     # Update the order status to "RETURNED"
+#     order.order_status = "RETURNED"
+#     order.save()
 
-            # Update order status to 'RETURN_PENDING'
-            order.order_status = 'RETURN_PENDING'
-            print(order.order_status)
-            order.save()  # Ensure status is saved
-
-
-            print(f"Order {order_id} status updated to {order.order_status}")
-
-            messages.success(request, "Return initiated successfully.")
-            return redirect('orders:orders_list')
-        else:
-            messages.error(request, "Invalid request.")
-            return redirect('orders:orders_list')
-    else:
-        messages.error(request, f"Cannot initiate return for order {order.id}. Status is {order.get_order_status_display()}.")
-        return redirect('orders:orders_list')
-
-
-
-
-
-
-@staff_member_required
-def manage_returns(request):
-    # Fetch the pending and approved return requests
-    pending_returns = ReturnReason.objects.filter(
-        order__order_status__in=['RETURN_PENDING', 'RETURNED'],
-        approved=False
-    ).order_by('-created_at')
-
-    approved_returns = ReturnReason.objects.filter(
-        order__order_status__in=['RETURN_PENDING', 'RETURNED'],
-        approved=True
-    ).order_by('-created_at')
-
-    paginator = Paginator(approved_returns, 5)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, 'manage_returns.html', {
-        'pending_returns': pending_returns,
-        'page_obj': page_obj,
-    })
-
-
-
-
-@staff_member_required
-def approve_return(request, return_id):
-    # Fetch the return request
-    return_request = get_object_or_404(ReturnReason, id=return_id)
-    order = return_request.order
-
-    # Credit the amount back to the user's wallet
-    try:
-        wallet = Wallet.objects.get(user=order.user)
-        wallet.credit(order.total_amount, description=f"Refund for returned order #{order.id}")
-    except Wallet.DoesNotExist:
-        messages.error(request, f"No wallet found for user associated with order #{order.id}.")
-        return redirect('orders:manage_returns')
-
-    # Restock the quantities of ordered items
-    for item in order.items.all(): 
-        product_variant = item.product_variant  
-        product_variant.quantity += item.quantity
-        product_variant.status = 'in_stock' if product_variant.quantity > 0 else 'out_of_stock'
-        product_variant.save()
-
-    # Update the return request to approved
-    return_request.approved = True
-    return_request.save()
-
-    # Update the order status to "RETURNED"
-    order.order_status = "RETURNED"
-    order.save()
-
-    messages.success(request, "Return request approved successfully.")
-    return redirect('orders:manage_returns')
+#     messages.success(request, "Return request approved successfully.")
+#     return redirect('orders:manage_returns')
 
 # --------------------------------------------------------------------------------------
 
+
+
+@csrf_exempt
+@login_required
+def return_order_item(request, order_item_id):
+    if request.method == "POST":
+        
+        order_item = get_object_or_404(OrderItem, id=order_item_id)
+
+       
+        if hasattr(order_item, 'order_item_return'):
+            messages.error(request, "A return request already exists for this item.")
+            return redirect('orders:order_items', order_id=order_item.order.id)  # Redirect back to the order items page
+
+        
+        sizing_issues = request.POST.get('sizing_issues', 'off') == 'on'
+        damaged_item = request.POST.get('damaged_item', 'off') == 'on'
+        incorrect_order = request.POST.get('incorrect_order', 'off') == 'on'
+        delivery_delays = request.POST.get('delivery_delays', 'off') == 'on'
+        other_reason = request.POST.get('other_reason', '')
+
+       
+        OrderItemReturn.objects.create(
+            order_item=order_item,
+            sizing_issues=sizing_issues,
+            damaged_item=damaged_item,
+            incorrect_order=incorrect_order,
+            delivery_delays=delivery_delays,
+            other_reason=other_reason,
+        )
+
+        
+        order_item.status = "RETURN_PENDING"
+        order_item.save()
+
+        messages.success(request, "Return initiated successfully.")
+        return redirect('orders:order_items', order_id=order_item.order.id)  # Redirect back to the order items page
+
+    messages.error(request, "Invalid request method.")
+    return redirect('orders:order_items', order_id=order_item.order.id)
+
+
+
+@staff_member_required
+def manage_item_returns(request):
+    
+    pending_returns = OrderItemReturn.objects.filter(approved=False).order_by('-created_at')
+    approved_returns = OrderItemReturn.objects.filter(approved=True).order_by('-created_at')
+
+    
+    pending_paginator = Paginator(pending_returns, 5)  
+    pending_page_number = request.GET.get('pending_page')
+    pending_page_obj = pending_paginator.get_page(pending_page_number)
+
+    
+    approved_paginator = Paginator(approved_returns, 5)
+    approved_page_number = request.GET.get('approved_page')
+    approved_page_obj = approved_paginator.get_page(approved_page_number)
+
+    return render(request, 'manage_returns.html', {
+        'pending_returns': pending_page_obj,
+        'approved_returns': approved_page_obj,
+    })
+
+
+@staff_member_required
+def approve_return_item(request, return_id):
+    
+    order_item_return = get_object_or_404(OrderItemReturn, id=return_id)
+    order_item = order_item_return.order_item
+    order = order_item.order
+
+  
+    total_order_price_before_discount = sum(item.total_price for item in order.items.all())
+    discount_factor = order.total_amount / total_order_price_before_discount if total_order_price_before_discount > 0 else 1
+    refund_amount = order_item.total_price * discount_factor
+
+    try:
+        
+        wallet = Wallet.objects.get(user=order.user)
+        wallet.credit(refund_amount, description=f"Refund for returned item #{order_item.id}")
+    except Wallet.DoesNotExist:
+        messages.error(request, f"Wallet not found for user associated with order #{order.id}.")
+        return redirect('orders:manage_returns')
+
+    
+    product_variant = order_item.product_variant
+    product_variant.quantity += order_item.quantity
+    product_variant.status = 'in_stock' if product_variant.quantity > 0 else 'out_of_stock'
+    product_variant.save()
+
+   
+    order_item_return.approved = True
+    order_item_return.refunded_amount = refund_amount
+    order_item_return.save()
+
+    order_item.status = "RETURNED"
+    order_item.save()
+
+    messages.success(request, f"Return approved for item {order_item.product_variant.product.name}.")
+    return redirect('orders:manage_returns')
+
+
+
+
 # ------invoice download-------------------------------
-from reportlab.pdfgen import canvas
-from io import BytesIO
-from django.http import HttpResponse
+
 
 def generate_invoice(request,order_id):
     order=Order.objects.get(id=order_id)

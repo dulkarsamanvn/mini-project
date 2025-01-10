@@ -20,9 +20,16 @@ class Product(models.Model):
     brand = models.ForeignKey('brand.Brand', on_delete=models.SET_NULL, null=True, related_name='products')
     created_at = models.DateTimeField(default=timezone.now)
     movement = models.CharField(max_length=20, choices=MOVEMENT_CHOICES)
+    is_listed = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
+    
+    def get_primary_image(self):
+        first_variant = self.variants.first()
+        if first_variant:
+            return first_variant.images.filter(is_primary=True).first()
+        return None
 
 class ProductVariant(models.Model):
     """Product Variant Model"""
@@ -38,6 +45,7 @@ class ProductVariant(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_stock')
+    is_listed = models.BooleanField(default=True)
 
 # ------------------------------------------------------------
     def get_discounted_price(self):

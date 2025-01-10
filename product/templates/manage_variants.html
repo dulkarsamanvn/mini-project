@@ -115,7 +115,10 @@
                                     data-status="{{ variant.status }}">
                                 Edit
                             </button>
-                            <a href="{% url 'product:delete_variant' variant_id=variant.id %}" class="btn btn-danger">Delete</a>
+                            <a href="{% url 'product:delete_variant' variant_id=variant.id %}" 
+                                class="btn {% if variant.is_listed %}btn-danger{% else %}btn-primary{% endif %}">
+                                    {% if variant.is_listed %}Unlist{% else %}List{% endif %}
+                            </a>
                         </div>
                     </td>
                 </tr>

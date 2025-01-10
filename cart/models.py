@@ -9,6 +9,7 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     color = models.CharField(max_length=50, blank=True, null=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    applied_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def save(self, *args, **kwargs):
         self.total_amount = self.product_variant.price * self.quantity
@@ -16,7 +17,14 @@ class CartItem(models.Model):
             self.quantity = 5
         if self.quantity > self.product_variant.quantity:
             raise ValueError("Quantity exceeds available stock.")
+        if self.applied_discount > self.total_amount:
+            self.applied_discount = self.total_amount
         super().save(*args, **kwargs)
+
+    
+    def get_discounted_total(self):
+        """Returns the total amount after applying the discount."""
+        return max(self.total_amount - self.applied_discount, 0)
 
     def get_variant_image(self):
         primary_image = self.product_variant.images.filter(is_primary=True).first()

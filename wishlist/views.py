@@ -10,7 +10,12 @@ from .models import Wishlist
 from product.models import Product, ProductVariant
 from cart.models import CartItem
 from cart.views import add_to_cart
+from django.contrib.auth.decorators import login_required
 
+
+
+
+@login_required
 def add_to_wishlist(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
@@ -29,6 +34,8 @@ def add_to_wishlist(request, product_id):
 
     return JsonResponse({'success': success, 'message': message})
 
+
+@login_required(login_url= 'login')
 def view_wishlist(request):
     wishlist_items = Wishlist.objects.filter(user=request.user)
     
@@ -43,7 +50,7 @@ def view_wishlist(request):
 
     return render(request, 'wishlist.html', {'wishlist_items': wishlist_items})
 
-
+@login_required
 def remove_from_wishlist(request, product_id):
     try:
         # Ensure the item exists in the user's wishlist

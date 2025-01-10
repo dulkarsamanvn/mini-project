@@ -40,7 +40,6 @@ def get_date_range(date_range, start_date=None, end_date=None):
             except ValueError:
                 raise ValueError("Invalid custom date format. Use YYYY-MM-DD.")
         else:
-            # Fallback to today if custom dates are invalid
             start_date = today
             end_date = today
     else:
@@ -107,18 +106,15 @@ def get_date_range(date_range, start_date=None, end_date=None):
 from orders.models import OrderItem
 
 def sales_report(request):
-    # Get date range parameter from request
     date_range = request.GET.get('date_range', 'day')
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
-    # Calculate the date range for filtering
+    
     start_date, end_date = get_date_range(date_range, start_date, end_date)
 
-    # Filter orders within the calculated date range (ignore time)
     orders = Order.objects.filter(order_date__date__range=[start_date, end_date], order_status='DELIVERED')
 
-    # Group by date and calculate total revenue per day
     daily_revenue = (
         orders.annotate(date=TruncDate('order_date'))
         .values('date')
@@ -126,23 +122,18 @@ def sales_report(request):
         .order_by('date')
     )
 
-    # Prepare data for the chart
-    # Prepare data for the chart
+    
     graph_labels = [entry['date'].strftime('%Y-%m-%d') for entry in daily_revenue]
     graph_data = [float(entry['total_revenue']) for entry in daily_revenue]  # Convert Decimal to float
 
-
-    # Pagination for orders
     paginator = Paginator(orders, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-
-    # Calculate sales summary
+ 
     overall_sales_count = orders.count() or 0
     overall_order_amount = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
     overall_discount = orders.aggregate(Sum('coupon__discount_percentage'))['coupon__discount_percentage__sum'] or 0
 
-    # Top Selling Products
     top_products = (
         OrderItem.objects.filter(order__in=orders)
         .values(product_name=F('product_variant__product__name'))
@@ -150,11 +141,9 @@ def sales_report(request):
         .order_by('-total_sold')[:10]
     )
 
-    # Extract names and quantities for the chart
     top_product_names = [item['product_name'] for item in top_products]
     top_product_quantities = [item['total_sold'] for item in top_products]
 
-    # Top Selling Categories
     top_categories = (
         OrderItem.objects.filter(order__in=orders)
         .values(category_name=F('product_variant__product__category__name'))
@@ -165,7 +154,7 @@ def sales_report(request):
     top_category_names = [item['category_name'] for item in top_categories]
     top_category_quantities = [item['total_sold'] for item in top_categories]
 
-    # Top Selling Brands
+ 
     top_brands = (
         OrderItem.objects.filter(order__in=orders)
         .values(brand_name=F('product_variant__product__brand__name'))
@@ -176,7 +165,7 @@ def sales_report(request):
     top_brand_names = [item['brand_name'] for item in top_brands]
     top_brand_quantities = [item['total_sold'] for item in top_brands]
 
-    # Add top-selling data to the context
+
     context = {
         'page_obj': page_obj,
         'overall_sales_count': overall_sales_count,
@@ -185,10 +174,10 @@ def sales_report(request):
         'date_range': date_range,
         'start_date': start_date,
         'end_date': end_date,
-        'graph_labels': json.dumps(graph_labels),  # Pass JSON-encoded labels
-        'graph_data': json.dumps(graph_data),      # Pass JSON-encoded data
-        'top_product_names': json.dumps(top_product_names),  # Encode as JSON
-        'top_product_quantities': json.dumps(top_product_quantities),  # Encode as JSON
+        'graph_labels': json.dumps(graph_labels),  
+        'graph_data': json.dumps(graph_data),     
+        'top_product_names': json.dumps(top_product_names),
+        'top_product_quantities': json.dumps(top_product_quantities),  
         'top_category_names':json.dumps(top_category_names),
         'top_category_quantities':json.dumps(top_category_quantities),
         'top_brand_names': json.dumps(top_brand_names),
@@ -210,7 +199,7 @@ def export_sales_report(request, format):
 
     start_date, end_date = get_date_range(date_range,start_date,end_date)
 
-    # Fetch filtered orders
+    
     orders = Order.objects.filter(order_date__date__range=[start_date, end_date], order_status='DELIVERED')
     orders = orders.annotate(
         original_total=Sum(F('items__quantity') * F('items__unit_price')),

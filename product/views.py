@@ -134,9 +134,14 @@ def edit_product(request, product_id):
 def delete_product(request, product_id):
     """Delete a specific product"""
     product = get_object_or_404(Product, id=product_id)
-    product.delete()
-    messages.success(request,'product deleted successfully')
-    return redirect('product:product_list')  # Redirect to the product list after deletion
+    if product.is_listed:
+        product.is_listed = False
+        messages.success(request, 'Product has been unlisted.')
+    else:
+        product.is_listed = True
+        messages.success(request,'Product has been listed.')
+    product.save()
+    return redirect('product:product_list')
 
 @login_required
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -231,9 +236,17 @@ def delete_variant(request, variant_id):
     """Delete a specific variant"""
     variant = get_object_or_404(ProductVariant, id=variant_id)
     product_id = variant.product.id  # Save product ID for redirect
-    variant.delete()
-    messages.success(request,'variant deleted successfully')
+    if variant.is_listed:
+        variant.is_listed = False
+        messages.success(request, 'Variant has been unlisted.')
+    else:
+        variant.is_listed = True
+        messages.success(request,'Variant has been listed.')
+    variant.save()
     return redirect('product:manage_variants', product_id=product_id)
+
+
+
 
 # @login_required
 # def product_detail(request, product_id):
@@ -299,13 +312,13 @@ def delete_variant(request, variant_id):
 
 #     return render(request, 'product_detail.html', context)
 
+from wishlist.models import Wishlist
 
-
-@login_required
+@login_required(login_url= 'login')
 def product_detail(request, product_id):
     """View to display product details with variants."""
     product = get_object_or_404(Product, pk=product_id)
-    variants = ProductVariant.objects.filter(product=product).select_related('product')
+    variants = ProductVariant.objects.filter(product=product,is_listed=True).select_related('product')
     
     # Get the primary variant and its images
     primary_variant = variants.first()
@@ -314,6 +327,14 @@ def product_detail(request, product_id):
     # Collect unique colors for variant selection
     dial_colors = variants.values('id', 'dial_color').distinct()
     case_colors = variants.values('id', 'case_color').distinct()
+
+    if request.user.is_authenticated:
+        product.in_wishlist = Wishlist.objects.filter(
+            user=request.user, 
+            product=product
+        ).exists()
+    else:
+        product.in_wishlist = False
 
     # Handle AJAX request for variant change
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -352,6 +373,8 @@ def product_detail(request, product_id):
         'Strap Material': primary_variant.strap_material if primary_variant else "Unknown",
     }
 
+    similar_products=Product.objects.filter(category=product.category).exclude(id=product.id)[:4]
+
     context = {
         'product': product,
         'primary_variant': primary_variant,
@@ -365,6 +388,7 @@ def product_detail(request, product_id):
         'specifications': specifications,
         'description': product.description,
         'price': discounted_price,  # Update price to reflect the discounted price
+        'similar_products':similar_products,
     }
 
     return render(request, 'product_detail.html', context)

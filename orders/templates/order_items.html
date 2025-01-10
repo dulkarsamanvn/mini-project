@@ -1,6 +1,8 @@
 {% extends "userbase.html" %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <style>
     .container {
         max-width: 1200px;
@@ -154,7 +156,8 @@
 
     .product-id {
         color: #666;
-        font-size: 12px;
+        font-size: 14px;
+        font-weight: bold;
     }
 
     .price {
@@ -229,6 +232,106 @@
         color: #666;
         margin-top: 10px;
     }
+
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.6);
+    }
+    .modal-content {
+        background-color: #fff;
+        margin: 10% auto; /* Center vertically and horizontally */
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%; /* Adjust as needed */
+        max-width: 400px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    #return-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #return-form label {
+        display: flex;
+        align-items: center;
+        font-size: 1rem;
+        color: #555;
+    }
+
+    #return-form input[type="checkbox"] {
+        margin-right: 10px;
+    }
+
+    #return-form textarea {
+        resize: none;
+        width: 100%;
+        height: 80px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+        color: #333;
+    }
+
+    #return-form button {
+        background-color: black;
+        color: #fff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    #return-form button:hover {
+        background-color: black;
+    }
+
+    /* Animation for Modal Appearance */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* Media Queries */
+    @media (max-width: 500px) {
+        .modal-content {
+            width: 95%;
+            padding: 15px;
+        }
+
+        #return-form textarea {
+            height: 60px;
+        }
+    }
+    .return-button {
+        background: #ff9900;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        float: right;
+        margin-top: 95px;
+    }
+
+    .return-button:hover {
+        background-color: #e68a00;
+    }
 </style>
 
 <div class="container">
@@ -267,7 +370,7 @@
             <div class="order-card">
                 <div class="delivery-info">
                     <span class="delivery-icon">🚚</span>
-                    {{order.order_status}}
+                    {{item.get_status_display}}
                     
                 </div>
 
@@ -289,6 +392,15 @@
                         <div class="price">₹{{ item.unit_price }}</div>
                     </div>
                 </div>
+                {% if order.order_status == 'DELIVERED' %}
+                    {% if item.status == 'RETURN_PENDING' or item.status == 'RETURNED' %}
+                        <!-- <span>Return process pending...</span> -->
+                    {% elif item.id %}
+                        <button class="return-button" data-id="{{ item.id }}">Return</button>
+                    {% else %}
+                        <span>Return option not available</span>
+                    {% endif %}
+                {% endif %}
 
                 <div class="progress-track">
                     <div class="progress-line"></div>
@@ -319,39 +431,161 @@
                     <div>on Thu, 4 Oct</div>
                 </div>
 
-                <!-- <div class="order-status">
-                    <small>Order status</small>
-                    <div>AWB no: 326727462983</div>
-                </div> -->
             </div>
             {% endfor %}
-            <!-- <div class="order-card">
-                <div class="delivery-info">
-                    <span class="delivery-icon">🚚</span>
-                    <div>
-                        <div>Delivered</div>
-                        <div>on Wed, 1 Oct</div>
-                    </div>
-                </div>
-
-                <div class="product">
-                    <img src="/placeholder.svg?height=80&width=80" alt="Tissot Watch" class="product-image">
-                    <div class="product-details">
-                        <h3>Tissot T120407370100 T-Sport Seastar 1000 Powermatic 80 Men's Watch</h3>
-                        <div class="product-id">T120407370100</div>
-                        <div class="price">₹84,000.00</div>
-                    </div>
-                </div>
-
-                <div class="exchange-info">
-                    Exchange/Return window closed on 17 Oct
-                </div>
-
-                <div class="rating">
-                    ☆ ☆ ☆ ☆ ☆
-                </div>
-            </div> -->
         </main>
     </div>
 </div>
+<!-- -------------------modal--------------------------------------------------------- -->
+<!-- <div id="return-modal" class="modal">
+    <div class="modal-content">
+        <h2>Return Item</h2>
+        <form id="return-form">
+            {% csrf_token %}
+            <label><input type="checkbox" id="sizing_issues"> Sizing Issues</label><br>
+            <label><input type="checkbox" id="damaged_item"> Damaged Item</label><br>
+            <label><input type="checkbox" id="incorrect_order"> Incorrect Order</label><br>
+            <label><input type="checkbox" id="delivery_delays"> Delivery Delays</label><br>
+            <textarea id="other_reason" placeholder="Other reason (optional)"></textarea><br>
+            <button type="button" id="submit-return" class="submit-button">Submit</button>
+        </form>
+    </div>
+</div> -->
+<div id="return-modal" class="modal">
+    <div class="modal-content">
+        <h2>Return Item</h2>
+        <form id="return-form" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="item_id" id="item-id">
+            <label><input type="checkbox" name="sizing_issues" id="sizing_issues"> Sizing Issues</label><br>
+            <label><input type="checkbox" name="damaged_item" id="damaged_item"> Damaged Item</label><br>
+            <label><input type="checkbox" name="incorrect_order" id="incorrect_order"> Incorrect Order</label><br>
+            <label><input type="checkbox" name="delivery_delays" id="delivery_delays"> Delivery Delays</label><br>
+            <textarea name="other_reason" id="other_reason" placeholder="Other reason (optional)"></textarea><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
+
+<!-- -------------------modal--------------------------------------------------------- -->
+<script>
+const openModalButtons = document.querySelectorAll('.return-button');
+const modal = document.getElementById('return-modal');
+const returnForm = document.getElementById('return-form');
+
+openModalButtons.forEach(button => {
+    button.addEventListener('click', (event) => {
+        const itemId = event.target.getAttribute('data-id');
+        modal.style.display = 'block';
+        document.getElementById('item-id').value = itemId; // Set the hidden input field's value
+
+        // Dynamically set the form action
+        returnForm.action = `/orders/return-item/${itemId}/`;
+    });
+});
+
+// Close Modal When Clicking Outside
+window.addEventListener('click', (event) => {
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+
+
+    // const openModalButtons = document.querySelectorAll('.return-button');
+    // const modal = document.getElementById('return-modal');
+    // const submitButton = document.getElementById('submit-return');
+
+    // openModalButtons.forEach(button => {
+    //     button.addEventListener('click', (event) => {
+    //         const itemId = event.target.getAttribute('data-id');
+    //         console.log("Item ID:", itemId);  // Add this line to log itemId
+    //         modal.style.display = 'block';
+    //         modal.setAttribute('data-item-id', itemId); // Store the item ID in the modal
+    //     });
+    // });
+
+    // // Close Modal When Clicking Outside
+    // window.addEventListener('click', (event) => {
+    //     if (event.target === modal) {
+    //         modal.style.display = 'none';
+    //     }
+    // });
+
+    // // Handle Submit
+    // submitButton.addEventListener('click', () => {
+    //     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    //     const itemId = modal.getAttribute('data-item-id');
+    //     const payload = {
+    //         sizing_issues: document.getElementById('sizing_issues').checked,
+    //         damaged_item: document.getElementById('damaged_item').checked,
+    //         incorrect_order: document.getElementById('incorrect_order').checked,
+    //         delivery_delays: document.getElementById('delivery_delays').checked,
+    //         other_reason: document.getElementById('other_reason').value.trim()
+    //     };
+
+    //     fetch(`/orders/return-item/${itemId}/`, {
+    //         method: "POST",
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //             "X-CSRFToken": csrfToken
+    //         },
+    //         body: JSON.stringify(payload)
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         if (data.success) {
+    //             alert(data.message);
+    //             modal.style.display = 'none';
+    //             // Update the item's status in the UI
+    //             const deliveryInfo = document.querySelector(`.delivery-info[data-id='${itemId}']`);
+    //             if (deliveryInfo) {
+    //                 deliveryInfo.textContent = "Return Pending";
+    //             }
+    //         } else {
+    //             alert(`Error: ${data.error}`);
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error('Error:', error);
+    //         alert('Something went wrong. Please try again.');
+    //     });
+    // });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    {% if messages %}
+        {% for message in messages %}
+        Toastify({
+            text: "{{ message }}",
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+        }).showToast();
+        {% endfor %}
+    {% endif %}
+</script>
 {% endblock %}

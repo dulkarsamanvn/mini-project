@@ -88,12 +88,12 @@
                     <th>Discount (%)</th>
                     <th>Valid From</th>
                     <th>Valid Until</th>
-                    <th>Active</th>
+                    <th>Active</th> 
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for coupon in coupon %}
+                {% for coupon in coupons %}
                 <tr>
                     <td>{{ coupon.code }}</td>
                     <td>{{ coupon.discount_percentage }}</td>
@@ -102,9 +102,10 @@
                     <td>{{ coupon.is_active }}</td>
                     <td class="actions">
                         <a href="{% url 'offer_management:edit_coupon' coupon.pk %}" class="btn btn-primary">Edit</a>
-                        <form method="post" action="{% url 'offer_management:remove_coupon' coupon.pk %}" onsubmit="return confirm('Are you sure you want to delete this coupon?');">
+                        <form method="post" action="{% url 'offer_management:remove_coupon' coupon.pk %}" onsubmit="return confirm('Are you sure you want to {% if coupon.is_listed %}unlist{% else %}list{% endif %} this Coupon?');"
+                        style="display:inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Remove</button>
+                            <button type="submit" class="btn {% if coupon.is_listed %} btn-danger {% else %}btn-success{% endif %}">{% if coupon.is_listed %}Unlist{% else %}List{% endif %}</button>
                         </form>
                     </td>
                 </tr>

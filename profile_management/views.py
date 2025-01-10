@@ -12,7 +12,7 @@ from django.urls import reverse
 
 
 # Create your views here.
-@login_required
+@login_required(login_url= 'login')
 def profile_overview(request):
     user=CustomUser.objects.get(id=request.user.id)
     context={

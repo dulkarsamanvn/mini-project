@@ -93,7 +93,7 @@
     <table>
         <thead>
             <tr>
-                <th>Order ID</th>
+                <th>Order Item ID</th>
                 <th>Reason</th>
                 <th>Created At</th>
                 <th>Status</th>
@@ -103,7 +103,7 @@
         <tbody>
             {% for return_request in pending_returns %}
             <tr>
-                <td>{{ return_request.order.id }}</td>
+                <td>{{ return_request.order_item.id }}</td>
                 <td>
                     {% if return_request.sizing_issues %} Sizing Issues {% endif %}
                     {% if return_request.damaged_item %} Damaged Item {% endif %}
@@ -114,7 +114,11 @@
                 <td>{{ return_request.created_at }}</td>
                 <td>Pending</td>
                 <td>
-                    <a href="{% url 'orders:approve_return' return_request.id %}" class="btn btn-success">Approve</a>
+                    <!-- Only the Approve button, which handles approval and return processing -->
+                    <form method="POST" action="{% url 'orders:approve_return_item' return_request.id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </form>
                 </td>
             </tr>
             {% empty %}
@@ -124,22 +128,40 @@
             {% endfor %}
         </tbody>
     </table>
+    <div class="pagination">
+        <span class="step-links">
+            {% if pending_returns.has_previous %}
+                <a href="?pending_page=1">&laquo; first</a>
+                <a href="?pending_page={{ pending_returns.previous_page_number }}">previous</a>
+            {% endif %}
+    
+            <span class="current">
+                Page {{ pending_returns.number }} of {{ pending_returns.paginator.num_pages }}.
+            </span>
+    
+            {% if pending_returns.has_next %}
+                <a href="?pending_page={{ pending_returns.next_page_number }}">next</a>
+                <a href="?pending_page={{ pending_returns.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+
 
     <!-- Approved Returns Section -->
     <h2>Approved Returns</h2>
     <table>
         <thead>
             <tr>
-                <th>Order ID</th>
+                <th>Order Item ID</th>
                 <th>Reason</th>
                 <th>Created At</th>
                 <th>Status</th>
             </tr>
         </thead>
         <tbody>
-            {% for return_request in page_obj %}
+            {% for return_request in approved_returns %}
             <tr>
-                <td>{{ return_request.order.id }}</td>
+                <td>{{ return_request.order_item.id }}</td>
                 <td>
                     {% if return_request.sizing_issues %} Sizing Issues {% endif %}
                     {% if return_request.damaged_item %} Damaged Item {% endif %}
@@ -159,18 +181,18 @@
     </table>
     <div class="pagination">
         <span class="step-links">
-            {% if page_obj.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% if approved_returns.has_previous %}
+                <a href="?approved_page=1">&laquo; first</a>
+                <a href="?approved_page={{ approved_returns.previous_page_number }}">previous</a>
             {% endif %}
-
+    
             <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                Page {{ approved_returns.number }} of {{ approved_returns.paginator.num_pages }}.
             </span>
-
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+    
+            {% if approved_returns.has_next %}
+                <a href="?approved_page={{ approved_returns.next_page_number }}">next</a>
+                <a href="?approved_page={{ approved_returns.paginator.num_pages }}">last &raquo;</a>
             {% endif %}
         </span>
     </div>
@@ -192,4 +214,3 @@
     {% endif %}
 </script>
 {% endblock %}
-

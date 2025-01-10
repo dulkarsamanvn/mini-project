@@ -234,7 +234,7 @@
                                    value="{{ item.quantity }}" readonly>
                             <button class="quantity-btn" onclick="updateQuantity('{{ item.id }}', 1)">+</button>
                         </div>
-                        <span class="loading" id="loading-{{ item.id }}" style="display: none;">...</span>
+                        <span class="loading" id="loading-{{ item.id }}" style="display: none;"></span>
                     </td>
                     <td data-label="Total" id="total-{{ item.id }}">
                         ₹{{ item.total_amount }}

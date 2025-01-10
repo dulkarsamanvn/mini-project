@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <title>Edit Coupon</title>
     <style>
        
@@ -86,12 +88,12 @@
 
             <div>
                 <label for="valid_from">Valid From:</label>
-                <input type="datetime-local" id="valid_from" name="valid_from" value="{{ coupon.valid_from|date:'Y-m-d\TH:i' }}" required>
+                <input type="date" id="valid_from" name="valid_from" value="{{ coupon.valid_from|date:'Y-m-d' }}" required>
             </div>
-
+            
             <div>
                 <label for="valid_until">Valid Until:</label>
-                <input type="datetime-local" id="valid_until" name="valid_until" value="{{ coupon.valid_until|date:'Y-m-d\TH:i' }}" required>
+                <input type="date" id="valid_until" name="valid_until" value="{{ coupon.valid_until|date:'Y-m-d' }}" required>
             </div>
 
             <div>
@@ -105,5 +107,20 @@
         </form>
         <a href="{% url 'offer_management:coupon_list' %}" style="text-decoration: none;" class="back-link">Back to Coupon List</a>
     </div>
+
+    <script>
+        {% if messages %}
+        {% for message in messages %}
+        Toastify({
+             text: "{{ message }}",
+             duration: 3000,
+             close: true,
+             gravity: "top",
+             position: "center",
+             backgroundColor: "{% if message.tags == 'error' %}red{% else %}green{% endif %}",
+        }).showToast();
+        {% endfor %}
+        {% endif %}
+     </script>
 </body>
 {% endblock %}

@@ -50,11 +50,26 @@ class Order(models.Model):
         super().save(*args, **kwargs)
 
 class OrderItem(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('CONFIRMED', 'Confirmed'),
+        ('SHIPPED', 'Shipped'),
+        ('DELIVERED', 'Delivered'),
+        ('CANCELED', 'Canceled'),
+        ('RETURN_PENDING', 'Return Pending'),
+        ('RETURNED', 'Returned'),
+        ('PAYMENT_PENDING', 'Payment Pending'),
+    ]
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='PENDING'
+    )
 
 
 # --------------------------------------------------------------------------------
@@ -72,6 +87,26 @@ class ReturnReason(models.Model):
     def __str__(self):
         return f"Return Reason for Order #{self.order.id} - Created on {self.created_at}"
 
+# ------------------------------------------------------------------------------------
+
+class OrderItemReturn(models.Model):
+    order_item = models.OneToOneField('OrderItem', on_delete=models.CASCADE, related_name='order_item_return')
+    sizing_issues = models.BooleanField(default=False)
+    damaged_item = models.BooleanField(default=False)
+    incorrect_order = models.BooleanField(default=False)
+    delivery_delays = models.BooleanField(default=False)
+    other_reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # If it's a new return request
+            self.order_item.status = 'RETURN_PENDING'
+            self.order_item.save()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Return for Order Item #{self.order_item.id} - Created on {self.created_at}"
 
 
 
