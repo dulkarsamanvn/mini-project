@@ -23,4 +23,8 @@ urlpatterns = [
 
 
     path('invoice/<int:order_id>/', views.generate_invoice, name='generate_invoice'),
+
+
+
+    path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
 ]

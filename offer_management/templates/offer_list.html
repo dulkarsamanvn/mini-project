@@ -74,6 +74,62 @@
         .actions form {
             margin: 0;
         }
+        .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        width: 400px;
+        max-width: 90%;
+    }
+
+    .btn-confirm {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-confirm:hover {
+        background-color: #218838;
+    }
+
+    .btn-cancel {
+        background-color: #dc3545;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background-color: #c82333;
+    }
+
+    .modal-actions {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* Modal hidden class */
+    .hidden {
+        display: none;
+    }
     </style>
 </head>
 <body>
@@ -107,22 +163,70 @@
                     <td>{{ offer.end_date }}</td>
                     <td class="actions">
                         <a href="{% url 'offer_management:edit_offer' offer.id %}" class="btn btn-primary">Edit</a>
-                        <form action="{% url 'offer_management:delete_offer' offer.id %}" method="POST" 
-                            onsubmit="return confirm('Are you sure you want to {% if offer.is_listed %}unlist{% else %}list{% endif %} this offer?')" 
-                            style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn {% if offer.is_listed %}btn-danger{% else %}btn-success{% endif %}">
-                                {% if offer.is_listed %}Unlist{% else %}List{% endif %}
-                            </button>
-                        </form>
+                        <button 
+                            class="btn {% if offer.is_listed %}btn-danger{% else %}btn-success{% endif %}" 
+                            onclick="showOfferModal('{{ offer.id }}', '{{ offer.is_listed }}')"
+                        >
+                            {% if offer.is_listed %}Unlist{% else %}List{% endif %}
+                        </button>
                     </td>
+                                       
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <!-- Modal -->
+    <div id="offer-modal" class="modal">
+        <div class="modal-content">
+            <p id="offer-modal-message"></p>
+            <form id="offer-modal-form" method="post" action="">
+                {% csrf_token %}
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-confirm">Confirm</button>
+                    <button type="button" class="btn btn-cancel" onclick="hideOfferModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
 </body>
 <script>
+    function showOfferModal(offerId, isListed) {
+        const modal = document.getElementById('offer-modal');
+        const modalMessage = document.getElementById('offer-modal-message');
+        const modalForm = document.getElementById('offer-modal-form');
+
+        // Set the modal message dynamically
+        modalMessage.textContent = `Are you sure you want to ${isListed === 'True' ? 'unlist' : 'list'} this offer?`;
+
+        // Set the form's action dynamically
+        modalForm.action = `/offer-management/delete-offer/${offerId}/`;  // Update this path according to your URLs
+
+        // Show the modal
+        modal.style.display = 'flex';
+    }
+
+    function hideOfferModal() {
+        const modal = document.getElementById('offer-modal');
+        modal.style.display = 'none';
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     {% if messages %}
     {% for message in messages %}
     Toastify({

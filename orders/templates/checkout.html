@@ -227,6 +227,19 @@
         color: #888;
         font-size: 0.9rem;
     }
+    .copy-btn {
+        padding: 5px 10px;
+        background-color: black;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .copy-btn:hover {
+        background-color: black;
+    }
 
     </style>
 </head>
@@ -307,17 +320,38 @@
         <div class="order-summary">
             <h2>Order Summary</h2>
            
-            <div class="promo-code">
-                <!-- Coupon apply form with POST method -->
+            <!-- <div class="promo-code">
+                
                 <form id="apply-coupon-form" method="POST" action="{% url 'orders:apply_coupon' %}">
                     {% csrf_token %}
                     <input type="text" class="promo-input" id="coupon-code" name="coupon_code" placeholder="Promo code" required>
                     <button type="submit" class="apply-btn">Apply</button>
                 </form>
-                <!-- Feedback message -->
+                
+                <div id="coupon-feedback" style="color: red; margin-bottom: 25px;"></div>
+            </div> -->
+            <!-- --------------------------------------------------------------------------------------- -->
+            <div class="promo-code">
+                {% if applied_coupon %}
+                    <div class="applied-coupon-container" style="display: flex; align-items: center; background-color: #e8f5e9; padding: 8px; border-radius: 4px; margin-bottom: 10px;">
+                        <span style="flex-grow: 1;">Applied: {{ applied_coupon.code }}</span>
+                        <button onclick="removeCoupon()" class="remove-coupon-btn" style="background: none; border: none; color: #ff0000; cursor: pointer; padding: 4px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                {% else %}
+                    <form id="apply-coupon-form" method="POST" action="{% url 'orders:apply_coupon' %}">
+                        {% csrf_token %}
+                        <input type="text" class="promo-input" id="coupon-code" name="coupon_code" placeholder="Promo code" required>
+                        <button type="submit" class="apply-btn">Apply</button>
+                    </form>
+                {% endif %}
                 <div id="coupon-feedback" style="color: red; margin-bottom: 25px;"></div>
             </div>
-            
+            <!-- --------------------------------------------------------------------------------------- -->
 
             <div class="summary-details">
                 <div class="summary-row">
@@ -354,9 +388,11 @@
             {% if coupons %}
                 <ul class="coupon-list">
                     {% for coupon in coupons %}
-                        <li class="coupon-item">
-                            <strong>{{ coupon.code }}</strong>Discount: {{ coupon.discount_percentage|floatformat:2 }}%
-                        </li>
+                    <li class="coupon-item">
+                        <span id="coupon-{{ forloop.counter }}">{{ coupon.code }}</span>
+                        Discount: {{ coupon.discount_percentage|floatformat:2 }}%
+                        <button class="copy-btn" data-coupon="{{ coupon.code }}">Copy</button>
+                    </li>
                         <!-- <li> Expires: {{ coupon.valid_until|date:"d M Y" }}</li> -->
                     {% endfor %}
                 </ul>
@@ -368,12 +404,37 @@
     </div>
 </body>
 <script>
+    // ---------------------------copy button--------------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+        const buttons = document.querySelectorAll(".copy-btn");
+        
+        buttons.forEach(button => {
+            button.addEventListener("click", () => {
+                const couponCode = button.getAttribute("data-coupon");
+
+                navigator.clipboard.writeText(couponCode)
+                    .then(() => {
+                        // Update button text to indicate success
+                        button.innerText = "Copied!";
+                        
+                        // Revert button text after 2 seconds
+                        setTimeout(() => {
+                            button.innerText = "Copy";
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error("Failed to copy text: ", err);
+                    });
+            });
+        });
+    });
+    // ---------------------------copy button--------------------------------------
+
+
 document.getElementById('apply-coupon-form').addEventListener('submit', async function (e) {
-    e.preventDefault();  // Prevent form submission
+    e.preventDefault();
 
     const couponCode = document.getElementById('coupon-code').value;
-
-    // Send the coupon code to the server for validation
     const csrfToken = await getCSRFToken();
     
     try {
@@ -389,9 +450,23 @@ document.getElementById('apply-coupon-form').addEventListener('submit', async fu
         const data = await response.json();
         
         if (response.ok) {
-            // Update the order summary with the new discount and total amount
-            document.getElementById('coupon-feedback').innerText = 'Coupon applied! ';
+            // Update the order summary
             updateOrderSummary(data.discount, data.new_total);
+            
+            // Replace the form with the applied coupon display
+            const promoCodeDiv = document.querySelector('.promo-code');
+            promoCodeDiv.innerHTML = `
+                <div class="applied-coupon-container" style="display: flex; align-items: center; background-color: #e8f5e9; padding: 8px; border-radius: 4px; margin-bottom: 10px;">
+                    <span style="flex-grow: 1;">Applied: ${couponCode}</span>
+                    <button onclick="removeCoupon()" class="remove-coupon-btn" style="background: none; border: none; color: #ff0000; cursor: pointer; padding: 4px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+            `;
         } else {
             document.getElementById('coupon-feedback').innerText = 'Invalid coupon code!';
         }
@@ -400,6 +475,52 @@ document.getElementById('apply-coupon-form').addEventListener('submit', async fu
         document.getElementById('coupon-feedback').innerText = 'An error occurred. Please try again.';
     }
 });
+
+async function removeCoupon() {
+    const csrfToken = await getCSRFToken();
+    
+    try {
+        const response = await fetch("{% url 'orders:remove_coupon' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Reset the order summary
+            updateOrderSummary(0, data.new_total);
+            
+            // Replace the applied coupon display with the form
+            const promoCodeDiv = document.querySelector('.promo-code');
+            promoCodeDiv.innerHTML = `
+                <form id="apply-coupon-form" method="POST" action="{% url 'orders:apply_coupon' %}">
+                    {% csrf_token %}
+                    <input type="text" class="promo-input" id="coupon-code" name="coupon_code" placeholder="Promo code" required>
+                    <button type="submit" class="apply-btn">Apply</button>
+                </form>
+               
+            `;
+            
+            // Reattach the event listener to the new form
+            document.getElementById('apply-coupon-form').addEventListener('submit', this.handleSubmit);
+            
+            // Reset the feedback message after 3 seconds
+            setTimeout(() => {
+                window.location.reload();
+            }); 
+        } else {
+            document.getElementById('coupon-feedback').innerText = 'Error removing coupon';
+            document.getElementById('coupon-feedback').style.color = 'red';
+        }
+    } catch (error) {
+        console.error("Error removing coupon:", error);
+        document.getElementById('coupon-feedback').innerText = 'An error occurred. Please try again.';
+    }
+}
 
 
 function updateOrderSummary(discount, newTotal) {

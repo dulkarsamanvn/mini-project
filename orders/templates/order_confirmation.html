@@ -1,96 +1,244 @@
-<!-- 
-<h1>Order Confirmation</h1>
-<p>Order ID: {{ order.id }}</p>
-<p>Order Date: {{ order.order_date }}</p>
-<p>Order Status: {{ order.get_order_status_display }}</p>
-<p>Payment Method: {{ order.get_payment_method_display }}</p>
-<p>Delivery Address: {{ order.address.address_line }}, {{ order.address.city }}</p>
-
-<h2>Order Items</h2>
-<ul>
-    {% for item in order.items.all %}
-        <li>{{ item.product_variant.name }} - Qty: {{ item.quantity }} - Unit Price: ${{ item.unit_price }} - Total: ${{ item.total_price }}</li>
-    {% endfor %}
-</ul>
-
-<p>Tax: ${{ order.tax }}</p>
-<p>Delivery Charge: ${{ order.delivery_charge }}</p>
-<p>Total Amount: ${{ order.total_amount }}</p>
-
-<a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
- -->
-
-
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Confirmation</title>
+    <title>Order Confirmation - LUELEE Clothing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        * {
             margin: 0;
-            background-color: #f5f5f5;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
         }
+
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
         .container {
-            text-align: center;
-            background-color: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
         }
-        .checkmark {
-            width: 100px;
-            height: 100px;
-            background-color: #4CAF50;
+
+        .success-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #4CAF50;
             border-radius: 50%;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             margin: 0 auto 20px;
         }
-        .checkmark img {
-            width: 60%;
-            height: 60%;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-        }
-        .buttons {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-        .button {
-            padding: 10px 20px;
-            border: 1px solid #333;
-            background-color: white;
-            color: #333;
-            text-decoration: none;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .button:hover {
-            background-color: #333;
+
+        .success-icon i {
             color: white;
+            font-size: 40px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .order-details h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .next-steps {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f1f8ff;
+            border-radius: 8px;
+        }
+
+        .next-steps h2 {
+            color: #2c3e50;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .next-steps ul {
+            list-style: none;
+            text-align: left;
+            margin-left: 20px;
+        }
+
+        .next-steps li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .next-steps li i {
+            margin-right: 10px;
+            color: #4CAF50;
+        }
+
+        .buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .button {
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .primary-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .primary-button:hover {
+            background-color: #45a049;
+        }
+
+        .secondary-button {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            border: 1px solid #dee2e6;
+        }
+
+        .secondary-button:hover {
+            background-color: #e9ecef;
+        }
+
+        .shipping-address {
+            text-align: left;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 20px auto;
+            }
+
+            .success-card {
+                padding: 20px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .button {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="checkmark">
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E" alt="Checkmark">
-        </div>
-        <h1>Thank You For Ordering!</h1>
-        <div class="buttons">
-            <a href="{% url 'orders:orders_list' %}" class="button">View Orders</a>
-            <a href="{% url 'home' %}" class="button">Continue Shopping</a>
-            <a href="{% url 'orders:generate_invoice' order.id %}" class="button">Download Invoice</a>
+        <div class="success-card">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h1>Thank You for Your Order!</h1>
+            <p>Your order has been successfully placed and will be processed soon.</p>
+            
+            <!-- <div class="order-details">
+                <h2>Order Summary</h2>
+                <div class="detail-row">
+                    <span>Order Number:</span>
+                    <strong>{{ order.order_no }}</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Order Date:</span>
+                    <strong>{{ order.order_date}}</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Payment Method:</span>
+                    <strong>{{ order.payment }}</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Total Amount:</span>
+                    <strong>${{ order.total }}</strong>
+                </div>
+                
+                <h2 style="margin-top: 20px;">Shipping Address</h2>
+                <div class="shipping-address">
+                    <p>{{ order.shipping_address.name }}</p>
+                    <p>{{ order.shipping_address.street_address }}</p>
+                    <p>{{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.pin_code }}</p>
+                    <p>{{ order.shipping_address.country }}</p>
+                    <p>Phone: {{ order.shipping_address.phone_no }}</p>
+                </div>
+            </div> -->
+
+            <div class="next-steps">
+                <h2>What's Next?</h2>
+                <ul>
+                    <li>
+                        <i class="fas fa-envelope"></i>
+                        You will receive an order confirmation email shortly
+                    </li>
+                    <li>
+                        <i class="fas fa-box"></i>
+                        We will notify you when your order ships
+                    </li>
+                    <li>
+                        <i class="fas fa-truck"></i>
+                        Expected delivery: 2-7 business days
+                    </li>
+                </ul>
+            </div>
+
+            <div class="buttons">
+                <a href="{% url 'home' %}" class="button secondary-button">
+                    Continue Shopping
+                </a>
+                <a href="{% url 'orders:generate_invoice' order.id %}" class="button secondary-button">
+                    Download Invoice
+                </a>
+                <a href="{% url 'orders:orders_list' %}" class="button secondary-button">
+                    View Orders
+                </a>
+            </div>
         </div>
     </div>
 </body>

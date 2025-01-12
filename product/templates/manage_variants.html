@@ -115,10 +115,16 @@
                                     data-status="{{ variant.status }}">
                                 Edit
                             </button>
-                            <a href="{% url 'product:delete_variant' variant_id=variant.id %}" 
+                            <!-- <a href="{% url 'product:delete_variant' variant_id=variant.id %}" 
                                 class="btn {% if variant.is_listed %}btn-danger{% else %}btn-primary{% endif %}">
                                     {% if variant.is_listed %}Unlist{% else %}List{% endif %}
-                            </a>
+                            </a> -->
+                                <button 
+                                    type="button" 
+                                    class="btn {% if variant.is_listed %}btn-danger{% else %}btn-primary{% endif %}" 
+                                    onclick="showVariantModal('{{ variant.id }}', '{{ variant.is_listed }}')">
+                                    {% if variant.is_listed %}Unlist{% else %}List{% endif %}
+                                </button>
                         </div>
                     </td>
                 </tr>
@@ -130,6 +136,18 @@
             </tbody>
         </table>
     </section>
+</div>
+<div id="variant-modal" class="modal hidden">
+    <div class="modal-content">
+        <p id="variant-modal-message"></p>
+        <form id="variant-modal-form" method="post" action="">
+            {% csrf_token %}
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-confirm">Confirm</button>
+                <button type="button" class="btn btn-cancel" onclick="hideVariantModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <style>
@@ -291,6 +309,68 @@
             font-size: 0.9rem;
         }
     }
+
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        display: none; /* Hidden by default */
+    }
+
+    .modal.hidden {
+        display: none;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-actions {
+        margin-top: 20px;
+    }
+
+    .modal-actions button {
+        margin: 0 10px;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .btn-confirm {
+        background-color: #4caf50;
+        color: white;
+    }
+
+    .btn-cancel {
+        background-color: #f44336;
+        color: white;
+    }
+
+    .btn-danger {
+        background-color: #f44336;
+        color: white;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
 </style>
 
 
@@ -438,6 +518,32 @@
             });
         }
     });
+
+
+
+    // ----------------------------------modal confirmation box---------------------------------------
+    function showVariantModal(variantId, isListed) {
+        const modal = document.getElementById('variant-modal');
+        const modalMessage = document.getElementById('variant-modal-message');
+        const modalForm = document.getElementById('variant-modal-form');
+
+        // Set the modal message dynamically
+        modalMessage.textContent = `Are you sure you want to ${isListed === 'True' ? 'unlist' : 'list'} this variant?`;
+
+        // Set the form's action dynamically
+        modalForm.action = `/product/variant/${variantId}/delete/`;
+
+        // Show the modal
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+    }
+
+    function hideVariantModal() {
+        const modal = document.getElementById('variant-modal');
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+    // -----------------------------------------------------------------------------
 
        {% if messages %}
        {% for message in messages %}

@@ -33,29 +33,97 @@ from reportlab.pdfgen import canvas
 from io import BytesIO
 from django.http import HttpResponse
 
+# @login_required
+# def checkout(request):
+#     try:
+#         # Ensure wallet exists
+#         try:
+#             wallet = Wallet.objects.get(user=request.user)
+#         except Wallet.DoesNotExist:
+#             wallet = Wallet.objects.create(user=request.user, balance=Decimal('0.00'))
+
+#         # Retrieve default address and cart items
+#         default_address = Address.objects.filter(user=request.user, is_default=True).first()
+#         address = Address.objects.filter(user=request.user)
+#         cart_items = CartItem.objects.filter(user=request.user)
+
+#         # Calculate cart total
+#         cart_total = sum(
+#             item.quantity * (
+#                 item.product_variant.get_discounted_price() if hasattr(item.product_variant, 'get_discounted_price') else item.product_variant.price
+#             ) for item in cart_items
+#         )
+
+#         # Retrieve active coupons
+#         coupons = Coupon.objects.filter(is_active=True,is_listed=True)
+
+#         # Retrieve discount from session
+#         discount_amount = Decimal(request.session.get('discount_amount', 0.00))
+#         final_total = max(cart_total - discount_amount, Decimal('0.00'))
+
+#         context = {
+#             'default_address': default_address,
+#             'cart_total': cart_total,
+#             'address': address,
+#             'coupons': coupons,
+#             'discount_amount': discount_amount,
+#             'final_total': final_total,
+#             'wallet_balance': wallet.balance
+#         }
+#         return render(request, 'checkout.html', context)
+
+#     except Exception as e:
+#         messages.error(request, f"An error occurred: {e}")
+#         return redirect('cart:cart')
+
+
 @login_required
 def checkout(request):
     try:
+        # Check if cart is empty
+        cart_items = CartItem.objects.filter(user=request.user)
+        if not cart_items.exists():
+            messages.warning(request, 'Your cart is empty.')
+            return redirect('cart:cart')
+
+        # Check for unlisted products and remove them
+        items_to_delete = []
+        valid_items = []
+        
+        for item in cart_items:
+            if not item.product_variant.product.is_listed:
+                items_to_delete.append(item)
+            else:
+                valid_items.append(item)
+
+        # If any unlisted items found, delete them and redirect to cart
+        if items_to_delete:
+            for item in items_to_delete:
+                item.delete()
+            messages.warning(request, 'Some items were removed from your cart as they are no longer available.')
+            return redirect('cart:cart')
+
         # Ensure wallet exists
         try:
             wallet = Wallet.objects.get(user=request.user)
         except Wallet.DoesNotExist:
             wallet = Wallet.objects.create(user=request.user, balance=Decimal('0.00'))
 
-        # Retrieve default address and cart items
+        # Retrieve default address and addresses
         default_address = Address.objects.filter(user=request.user, is_default=True).first()
         address = Address.objects.filter(user=request.user)
-        cart_items = CartItem.objects.filter(user=request.user)
 
-        # Calculate cart total
+        # Calculate cart total only for valid items
         cart_total = sum(
             item.quantity * (
-                item.product_variant.get_discounted_price() if hasattr(item.product_variant, 'get_discounted_price') else item.product_variant.price
-            ) for item in cart_items
+                item.product_variant.get_discounted_price() 
+                if hasattr(item.product_variant, 'get_discounted_price') 
+                else item.product_variant.price
+            ) for item in valid_items
         )
 
         # Retrieve active coupons
-        coupons = Coupon.objects.filter(is_active=True,is_listed=True)
+        coupons = Coupon.objects.filter(is_active=True, is_listed=True)
 
         # Retrieve discount from session
         discount_amount = Decimal(request.session.get('discount_amount', 0.00))
@@ -68,13 +136,14 @@ def checkout(request):
             'coupons': coupons,
             'discount_amount': discount_amount,
             'final_total': final_total,
-            'wallet_balance': wallet.balance
+            'wallet_balance': wallet.balance,
+            'cart_items': valid_items  # Use valid items instead of all cart items
         }
         return render(request, 'checkout.html', context)
 
     except Exception as e:
         messages.error(request, f"An error occurred: {e}")
-        return redirect('cart:view')
+        return redirect('cart:cart')
 
 @csrf_exempt
 def apply_coupon(request):
@@ -197,6 +266,150 @@ def apply_coupon(request):
 #         return JsonResponse({'error': 'Invalid request method.'}, status=400)
 
 
+# -------------------before removing unlisted products-------------------------
+# @login_required
+# def place_order(request):
+#     # Retrieve cart items
+#     cart_items = CartItem.objects.filter(user=request.user)
+#     if not cart_items.exists():
+#         messages.error(request, "Your cart is empty.")
+#         return redirect('cart:cart')
+
+#     # Retrieve POST data
+#     address_id = request.POST.get('address_id')
+#     payment_method = request.POST.get('payment_method')
+#     if not address_id or not payment_method:
+#         messages.error(request, "Please select both address and payment method.")
+#         return redirect('orders:checkout')
+
+#     # Get the user's address
+#     address = get_object_or_404(Address, id=address_id, user=request.user)
+
+#     # Calculate the original total amount
+#     original_total = sum(
+#         item.quantity * (
+#             item.product_variant.get_discounted_price() if hasattr(item.product_variant, 'get_discounted_price') else item.product_variant.price
+#         ) for item in cart_items
+#     )
+
+#     # Retrieve and validate the coupon
+#     coupon_code = request.session.get('coupon_code')  # Coupon code stored in session
+#     coupon = None
+#     discount_amount = Decimal(0.00)
+
+#     if coupon_code:
+#         try:
+#             coupon = Coupon.objects.get(code=coupon_code, is_active=True)
+#             discount_amount = (original_total * coupon.discount_percentage) / 100  # Calculate discount amount
+#         except Coupon.DoesNotExist:
+#             messages.warning(request, "Invalid or expired coupon.")
+#             coupon = None  # Reset coupon if invalid
+
+    
+#     discounted_total = original_total - discount_amount
+
+#     try:
+#         with transaction.atomic():
+#             wallet = Wallet.objects.get(user=request.user)
+
+#             if payment_method == 'wallet':
+               
+#                 if wallet.balance < discounted_total:
+#                     messages.error(request, "Insufficient wallet balance. Please select another payment method.")
+#                     return redirect('orders:checkout')
+
+              
+#                 wallet.debit(discounted_total, description="Order payment using wallet")
+            
+#             if payment_method=='cod' and discounted_total < 1000:
+#                 messages.error(request,"Orders with COD payment must be at least ₹1000.")
+#                 return redirect('orders:checkout')
+
+          
+#             order = Order.objects.create(
+#                 user=request.user,
+#                 address=address,
+#                 payment_method=payment_method,
+#                 order_date=now(),
+#                 delivery_charge=Decimal('0.00'),
+#                 tax=Decimal('0.00'), 
+#                 coupon=coupon  
+#             )
+
+            
+#             for cart_item in cart_items:
+#                 product_variant = cart_item.product_variant
+#                 quantity = cart_item.quantity
+#                 unit_price = (
+#                     product_variant.get_discounted_price() if hasattr(product_variant, 'get_discounted_price') else product_variant.price
+#                 )
+#                 total_price = unit_price * quantity
+
+#                 if product_variant.quantity < quantity:
+#                     raise ValueError(f"Insufficient stock for {product_variant.product.name}.")
+
+               
+#                 product_variant.quantity -= quantity
+#                 product_variant.save()
+
+                
+#                 OrderItem.objects.create(
+#                     order=order,
+#                     product_variant=product_variant,
+#                     quantity=quantity,
+#                     unit_price=unit_price,
+#                     total_price=total_price
+#                 )
+
+#             # Calculate the final total
+#             tax_amount = discounted_total * order.tax
+#             final_total = discounted_total + tax_amount + order.delivery_charge
+#             order.total_amount = final_total.quantize(Decimal('0.01'))
+#             order.save()
+
+            
+#             cart_items.delete()
+
+            
+#             request.session.pop('coupon_code', None)
+#             request.session.pop('discount_amount', None)
+
+#             # Handle payment methods
+#             if payment_method == 'razorpay':
+#                 # Razorpay integration
+#                 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+#                 razorpay_order = client.order.create({
+#                     "amount": int(order.total_amount * 100),  # Razorpay requires amount in paise
+#                     "currency": "INR",
+#                     "payment_capture": 1
+#                 })
+#                 order.razorpay_order_id = razorpay_order['id']
+#                 order.save()
+#                 return redirect('orders:razorpay_payment', order_id=order.id)
+
+#             elif payment_method == 'cod':
+                
+#                 messages.success(request, "Order placed successfully!")
+#                 return redirect('orders:order_confirmation', order_id=order.id)
+
+#             elif payment_method == 'wallet':
+#                 order.order_status='CONFIRMED'
+#                 order.save()
+#                 messages.success(request, "Order placed successfully using wallet balance!")
+#                 return redirect('orders:order_confirmation', order_id=order.id)
+
+#             else:
+#                 messages.error(request, "Invalid payment method.")
+#                 return redirect('orders:checkout')
+
+#     except ValueError as e:
+#         messages.error(request, f"An error occurred: {str(e)}")
+#         return redirect('orders:checkout')
+#     except Exception as e:
+#         messages.error(request, f"An unexpected error occurred: {str(e)}")
+#         return redirect('orders:checkout')
+
+# -------------------before removing unlisted products-------------------------
 
 @login_required
 def place_order(request):
@@ -204,6 +417,19 @@ def place_order(request):
     cart_items = CartItem.objects.filter(user=request.user)
     if not cart_items.exists():
         messages.error(request, "Your cart is empty.")
+        return redirect('cart:cart')
+
+    # Check for unlisted products before proceeding
+    unlisted_items = []
+    for item in cart_items:
+        if not item.product_variant.product.is_listed:
+            unlisted_items.append(item)
+    
+    # If unlisted items found, delete them and redirect to cart
+    if unlisted_items:
+        for item in unlisted_items:
+            item.delete()
+        messages.error(request, "Some items in your cart are no longer available. Please review your cart.")
         return redirect('cart:cart')
 
     # Retrieve POST data
@@ -216,27 +442,28 @@ def place_order(request):
     # Get the user's address
     address = get_object_or_404(Address, id=address_id, user=request.user)
 
-    # Calculate the original total amount
+    # Calculate the original total amount (only for listed products)
     original_total = sum(
         item.quantity * (
-            item.product_variant.get_discounted_price() if hasattr(item.product_variant, 'get_discounted_price') else item.product_variant.price
+            item.product_variant.get_discounted_price() 
+            if hasattr(item.product_variant, 'get_discounted_price') 
+            else item.product_variant.price
         ) for item in cart_items
     )
 
     # Retrieve and validate the coupon
-    coupon_code = request.session.get('coupon_code')  # Coupon code stored in session
+    coupon_code = request.session.get('coupon_code')
     coupon = None
     discount_amount = Decimal(0.00)
 
     if coupon_code:
         try:
-            coupon = Coupon.objects.get(code=coupon_code, is_active=True)
-            discount_amount = (original_total * coupon.discount_percentage) / 100  # Calculate discount amount
+            coupon = Coupon.objects.get(code=coupon_code, is_active=True, is_listed=True)
+            discount_amount = (original_total * coupon.discount_percentage) / 100
         except Coupon.DoesNotExist:
             messages.warning(request, "Invalid or expired coupon.")
-            coupon = None  # Reset coupon if invalid
+            coupon = None
 
-    
     discounted_total = original_total - discount_amount
 
     try:
@@ -244,46 +471,50 @@ def place_order(request):
             wallet = Wallet.objects.get(user=request.user)
 
             if payment_method == 'wallet':
-               
                 if wallet.balance < discounted_total:
                     messages.error(request, "Insufficient wallet balance. Please select another payment method.")
                     return redirect('orders:checkout')
-
-              
                 wallet.debit(discounted_total, description="Order payment using wallet")
             
-            if payment_method=='cod' and discounted_total < 1000:
-                messages.error(request,"Orders with COD payment must be at least ₹1000.")
+            if payment_method == 'cod' and discounted_total < 1000:
+                messages.error(request, "Orders with COD payment must be at least ₹1000.")
                 return redirect('orders:checkout')
 
-          
+            # Create order
             order = Order.objects.create(
                 user=request.user,
                 address=address,
                 payment_method=payment_method,
                 order_date=now(),
                 delivery_charge=Decimal('0.00'),
-                tax=Decimal('0.00'), 
-                coupon=coupon  
+                tax=Decimal('0.00'),
+                coupon=coupon
             )
 
-            
+            # Process each cart item
             for cart_item in cart_items:
                 product_variant = cart_item.product_variant
+                
+                # Double-check if product is still listed
+                if not product_variant.product.is_listed:
+                    raise ValueError(f"{product_variant.product.name} is no longer available.")
+                
                 quantity = cart_item.quantity
                 unit_price = (
-                    product_variant.get_discounted_price() if hasattr(product_variant, 'get_discounted_price') else product_variant.price
+                    product_variant.get_discounted_price() 
+                    if hasattr(product_variant, 'get_discounted_price') 
+                    else product_variant.price
                 )
                 total_price = unit_price * quantity
 
                 if product_variant.quantity < quantity:
                     raise ValueError(f"Insufficient stock for {product_variant.product.name}.")
 
-               
+                # Update stock
                 product_variant.quantity -= quantity
                 product_variant.save()
 
-                
+                # Create order item
                 OrderItem.objects.create(
                     order=order,
                     product_variant=product_variant,
@@ -292,25 +523,22 @@ def place_order(request):
                     total_price=total_price
                 )
 
-            # Calculate the final total
+            # Calculate final total
             tax_amount = discounted_total * order.tax
             final_total = discounted_total + tax_amount + order.delivery_charge
             order.total_amount = final_total.quantize(Decimal('0.01'))
             order.save()
 
-            
+            # Clear cart and session data
             cart_items.delete()
-
-            
             request.session.pop('coupon_code', None)
             request.session.pop('discount_amount', None)
 
             # Handle payment methods
             if payment_method == 'razorpay':
-                # Razorpay integration
                 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
                 razorpay_order = client.order.create({
-                    "amount": int(order.total_amount * 100),  # Razorpay requires amount in paise
+                    "amount": int(order.total_amount * 100),
                     "currency": "INR",
                     "payment_capture": 1
                 })
@@ -319,12 +547,11 @@ def place_order(request):
                 return redirect('orders:razorpay_payment', order_id=order.id)
 
             elif payment_method == 'cod':
-                
                 messages.success(request, "Order placed successfully!")
                 return redirect('orders:order_confirmation', order_id=order.id)
 
             elif payment_method == 'wallet':
-                order.order_status='CONFIRMED'
+                order.order_status = 'CONFIRMED'
                 order.save()
                 messages.success(request, "Order placed successfully using wallet balance!")
                 return redirect('orders:order_confirmation', order_id=order.id)
@@ -334,7 +561,7 @@ def place_order(request):
                 return redirect('orders:checkout')
 
     except ValueError as e:
-        messages.error(request, f"An error occurred: {str(e)}")
+        messages.error(request, str(e))
         return redirect('orders:checkout')
     except Exception as e:
         messages.error(request, f"An unexpected error occurred: {str(e)}")
@@ -821,3 +1048,57 @@ def generate_invoice(request,order_id):
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
     return response
+
+
+
+
+
+
+# ------------------------------------
+@csrf_exempt
+def remove_coupon(request):
+    if request.method == 'POST':
+        try:
+            if not request.user.is_authenticated:
+                return JsonResponse({'error': 'User not authenticated.'}, status=403)
+
+            # Get the cart items for the user
+            cart_items = CartItem.objects.filter(user=request.user)
+            if not cart_items.exists():
+                return JsonResponse({'error': 'Your cart is empty.'}, status=400)
+
+            # Calculate the total amount without any coupon discount
+            total_amount = sum(
+                item.quantity * (
+                    item.product_variant.get_discounted_price() 
+                    if hasattr(item.product_variant, 'get_discounted_price') 
+                    else item.product_variant.price
+                ) for item in cart_items
+            )
+
+            # Remove coupon from session
+            if 'coupon_code' in request.session:
+                del request.session['coupon_code']
+            if 'discount_amount' in request.session:
+                del request.session['discount_amount']
+
+            # Remove applied discounts from cart items
+            for item in cart_items:
+                item.applied_discount = 0
+                item.save()
+
+            # Return success response with new total
+            return JsonResponse({
+                'success': True,
+                'new_total': total_amount
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'error': str(e)
+            }, status=400)
+    else:
+        return JsonResponse({
+            'error': 'Invalid request method.'
+        }, status=400)
+# ------------------------------------

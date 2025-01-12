@@ -7,28 +7,53 @@ from django.contrib import messages
 from django.utils.translation import gettext as _
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-# Create your views here.
-# @login_required
+
+# @login_required(login_url= 'login')
 # def cart_view(request):
-#     cart_items=CartItem.objects.filter(user=request.user)
-#     total_amount=sum(item.total_amount for item in cart_items)
-#     return render(request, 'cart.html', {'cart_items': cart_items, 'total_amount': total_amount})
-@login_required(login_url= 'login')
+#     cart_items = CartItem.objects.filter(user=request.user)
+
+#     for item in cart_items:
+#         discounted_price = item.product_variant.get_discounted_price()  # Assuming this method exists in ProductVariant
+#         final_price = discounted_price if discounted_price < item.product_variant.price else item.product_variant.price
+#         item.total_amount = item.quantity * final_price  # Recalculate the total amount
+
+#     context = {
+#         'cart_items': cart_items,
+#         'total_amount': sum(item.total_amount for item in cart_items),
+#     }
+#     return render(request, 'cart.html', context)
+
+
+@login_required(login_url='login')
 def cart_view(request):
     cart_items = CartItem.objects.filter(user=request.user)
+    items_to_delete = []
+    valid_items = []
 
+    # Check each cart item
     for item in cart_items:
-        discounted_price = item.product_variant.get_discounted_price()  # Assuming this method exists in ProductVariant
+        # Check if product is listed
+        if not item.product_variant.product.is_listed:
+            items_to_delete.append(item)
+            continue
+        
+        # Calculate prices for valid items
+        discounted_price = item.product_variant.get_discounted_price()
         final_price = discounted_price if discounted_price < item.product_variant.price else item.product_variant.price
-        item.total_amount = item.quantity * final_price  # Recalculate the total amount
+        item.total_amount = item.quantity * final_price
+        valid_items.append(item)
+
+    # Delete unlisted items
+    if items_to_delete:
+        for item in items_to_delete:
+            item.delete()
+        messages.warning(request, 'Some items were removed from your cart as they are no longer available.')
 
     context = {
-        'cart_items': cart_items,
-        'total_amount': sum(item.total_amount for item in cart_items),
+        'cart_items': valid_items,
+        'total_amount': sum(item.total_amount for item in valid_items),
     }
     return render(request, 'cart.html', context)
-
-
 
 
 # -----------------------------------------------------------

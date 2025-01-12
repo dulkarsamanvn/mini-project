@@ -28,12 +28,11 @@
                 </td>
                 <td class="actions">
                     <a href="{% url 'admin_edit_category' category.id %}" class="btn btn-edit">Edit</a>
-                    <a href="{% url 'admin_toggle_category' category.id %}" 
-                        class="btn btn-toggle" 
-                        onclick="return confirm('Are you sure you want to {% if category.is_listed %}unlist{% else %}list{% endif %} this category?');">
+                    <button class="btn btn-toggle" 
+                        onclick="showConfirmationModal('{{ category.id }}', '{{ category.is_listed|yesno:"True,False" }}')">
                         {% if category.is_listed %} Unlist {% else %} List {% endif %}
-                    </a>
-                </td>
+                    </button>
+                </td>                
             </tr>
             {% empty %}
             <tr>
@@ -42,6 +41,16 @@
             {% endfor %}
         </tbody>
     </table>
+</div>
+
+<div id="confirmation-modal" class="modal hidden">
+    <div class="modal-content">
+        <p id="modal-text">Are you sure?</p>
+        <div class="modal-actions">
+            <button id="confirm-button" class="btn btn-confirm">Confirm</button>
+            <button onclick="hideConfirmationModal()" class="btn btn-cancel">Cancel</button>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -112,8 +121,89 @@
         color: red;
         font-weight: bold;
     }
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal.hidden {
+        display: none;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-actions {
+        margin-top: 20px;
+    }
+
+    .modal-actions button {
+        margin: 0 10px;
+    }
+    .btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .btn-confirm {
+        background-color: #4caf50;
+        color: white;
+    }
+
+    .btn-cancel {
+        background-color: #f44336;
+        color: white;
+    }
 </style>
 <script>
+   function showConfirmationModal(categoryId, isListed) {
+    const modal = document.getElementById('confirmation-modal');
+    const modalText = document.getElementById('modal-text');
+    const confirmButton = document.getElementById('confirm-button');
+
+    modalText.textContent = `Are you sure you want to ${isListed === 'True' ? 'unlist' : 'list'} this category?`;
+    const confirmUrl = `/category/toggle/${categoryId}/`;
+    confirmButton.onclick = function () {
+        window.location.href = confirmUrl;
+    };
+    modal.classList.remove('hidden');
+}
+
+function hideConfirmationModal() {
+    const modal = document.getElementById('confirmation-modal');
+    modal.classList.add('hidden');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     {% if messages %}
     {% for message in messages %}
     Toastify({

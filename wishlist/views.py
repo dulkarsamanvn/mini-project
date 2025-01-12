@@ -34,21 +34,58 @@ def add_to_wishlist(request, product_id):
 
     return JsonResponse({'success': success, 'message': message})
 
+# ----------------------before removing unlisted products------------------------------
+# @login_required(login_url= 'login')
+# def view_wishlist(request):
+#     wishlist_items = Wishlist.objects.filter(user=request.user)
+    
+#     # Check if variants exist for each product and pass them to the template
+#     for item in wishlist_items:
+#         product = item.product
+#         # Use the 'variants' related name instead of 'productvariant_set'
+#         if not product.variants.exists():
+#             print(f"Product '{product.name}' has no variants.")
+#         else:
+#             print(f"Product '{product.name}' has variants.")
 
-@login_required(login_url= 'login')
+#     return render(request, 'wishlist.html', {'wishlist_items': wishlist_items})
+
+# ----------------------before removing unlisted products------------------------------
+
+
+@login_required(login_url='login')
 def view_wishlist(request):
     wishlist_items = Wishlist.objects.filter(user=request.user)
-    
-    # Check if variants exist for each product and pass them to the template
+    items_to_delete = []
+    valid_items = []
+
+    # Check for unlisted products and validate variants
     for item in wishlist_items:
         product = item.product
-        # Use the 'variants' related name instead of 'productvariant_set'
+        
+        # Check if product is listed
+        if not product.is_listed:
+            items_to_delete.append(item)
+            continue
+        
+        # Check variants only for listed products
         if not product.variants.exists():
             print(f"Product '{product.name}' has no variants.")
         else:
             print(f"Product '{product.name}' has variants.")
+            
+        valid_items.append(item)
 
-    return render(request, 'wishlist.html', {'wishlist_items': wishlist_items})
+    # Delete unlisted items
+    if items_to_delete:
+        for item in items_to_delete:
+            item.delete()
+        messages.warning(request, 'Some items were removed from your wishlist as they are no longer available.')
+
+    context = {
+        'wishlist_items': valid_items
+    }
+    return render(request, 'wishlist.html', context)
 
 @login_required
 def remove_from_wishlist(request, product_id):

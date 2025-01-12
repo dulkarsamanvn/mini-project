@@ -128,6 +128,55 @@
         .pagination a.active {
             background: #f5f5f5;
         }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 400px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-confirm {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -175,11 +224,10 @@
                                 <span class="status-blocked">Blocked</span>
                             {% endif %}
                         </td>
-                        <td class="actions">
+                        <!-- <td class="actions">
                             {% if user.is_active %}
                                 <form method="post" action="{% url 'block_user' user.id %}">
                                     {% csrf_token %}
-                                    <!-- <button type="submit" class="btn btn-block">Block</button> -->
                                     <a href="{% url 'block_user' user.id %}" 
                                     class="btn btn-block" 
                                     onclick="return confirm('Are you sure you want to block {{ user.username }}?');">
@@ -192,6 +240,13 @@
                                     <button type="submit" class="btn btn-unblock">Unblock</button>
                                 </form>
                             {% endif %}
+                        </td> -->
+                        <td class="actions">
+                            {% if user.is_active %}
+                                <button class="btn btn-block" onclick="showBlockUnblockModal('{{ user.id }}', '{{ user.username }}', 'block')">Block</button>
+                            {% else %}
+                                <button class="btn btn-unblock" onclick="showBlockUnblockModal('{{ user.id }}', '{{ user.username }}', 'unblock')">Unblock</button>
+                            {% endif %}
                         </td>
                     </tr>
                 {% empty %}
@@ -202,7 +257,61 @@
             </tbody>
         </table>
     </div>
+
+    <div id="block-unblock-modal" class="modal hidden">
+        <div class="modal-content">
+            <p id="modal-message">Are you sure?</p>
+            <div class="modal-actions">
+                <form id="modal-form" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-confirm">Confirm</button>
+                </form>
+                <button type="button" class="btn btn-cancel" onclick="hideBlockUnblockModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
     <script>
+
+function showBlockUnblockModal(userId, username, action) {
+    const modal = document.getElementById('block-unblock-modal');
+    const modalMessage = document.getElementById('modal-message');
+    const modalForm = document.getElementById('modal-form');
+
+    // Update modal message and form action dynamically
+    modalMessage.textContent = `Are you sure you want to ${action} ${username}?`;
+
+    // Use the correct URL pattern for your Django views
+    if (action === 'block') {
+        modalForm.action = `/block-user/${userId}/`;
+    } else if (action === 'unblock') {
+        modalForm.action = `/unblock-user/${userId}/`;
+    }
+
+    // Show the modal
+    modal.classList.remove('hidden');
+}
+
+function hideBlockUnblockModal() {
+    const modal = document.getElementById('block-unblock-modal');
+    modal.classList.add('hidden');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         {% if messages %}
         {% for message in messages %}
         Toastify({

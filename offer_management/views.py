@@ -202,8 +202,23 @@ def add_offer(request):
         selected_id = request.POST.get("selected_id")
         end_date = request.POST.get("end_date")
 
-        if not(name and discount and description and offer_type and selected_id and end_date):
-            messages.error(request, 'All fields are required')
+        if not (name and discount and description and offer_type and selected_id and end_date):
+            messages.error(request, "All fields are required.")
+            return redirect('offer_management:add_offer')
+        if not (1 <= float(discount) <= 100):
+            messages.error(request, "Discount must be between 1 and 100.")
+            return redirect('offer_management:add_offer')
+        if localdate() > parse_date(end_date):
+            messages.error(request, "End date cannot be in the past.")
+            return redirect('offer_management:add_offer')
+        if Offer.objects.filter(name__iexact=name).exists():
+            messages.error(request, "An offer with this name already exists.")
+            return redirect('offer_management:add_offer')
+        if offer_type == "category" and not Category.objects.filter(pk=selected_id).exists():
+            messages.error(request, "Selected category does not exist.")
+            return redirect('offer_management:add_offer')
+        if offer_type == "product" and not Product.objects.filter(pk=selected_id).exists():
+            messages.error(request, "Selected product does not exist.")
             return redirect('offer_management:add_offer')
 
         offer = Offer(
@@ -250,8 +265,23 @@ def edit_offer(request, pk):
         selected_id = request.POST.get("selected_id")
         end_date = request.POST.get("end_date")
 
-        if not(name and discount and description and offer_type and selected_id and end_date):
-            messages.error(request, 'All fields are required')
+        if not (name and discount and description and offer_type and selected_id and end_date):
+            messages.error(request, "All fields are required.")
+            return redirect('offer_management:edit_offer', pk=pk)
+        if not (1 <= float(discount) <= 100):
+            messages.error(request, "Discount must be between 1 and 100.")
+            return redirect('offer_management:edit_offer', pk=pk)
+        if localdate() > parse_date(end_date):
+            messages.error(request, "End date cannot be in the past.")
+            return redirect('offer_management:edit_offer', pk=pk)
+        if Offer.objects.filter(name__iexact=name).exclude(pk=pk).exists():
+            messages.error(request, "An offer with this name already exists.")
+            return redirect('offer_management:edit_offer', pk=pk)
+        if offer_type == "category" and not Category.objects.filter(pk=selected_id).exists():
+            messages.error(request, "Selected category does not exist.")
+            return redirect('offer_management:edit_offer', pk=pk)
+        if offer_type == "product" and not Product.objects.filter(pk=selected_id).exists():
+            messages.error(request, "Selected product does not exist.")
             return redirect('offer_management:edit_offer', pk=pk)
 
         offer.name = name
