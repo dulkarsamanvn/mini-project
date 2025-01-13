@@ -49,7 +49,7 @@ def mens_page(request):
     products = Product.objects.annotate(
         primary_variant_id=Subquery(primary_variant_subquery),
         primary_variant_price=Subquery(primary_variant_price_subquery, output_field=DecimalField(max_digits=10, decimal_places=2))
-    ).filter(primary_variant_id__isnull=False)
+    ).filter(primary_variant_id__isnull=False,is_listed=True)
 
  
     men_category = Category.objects.filter(name__iexact='men').first()
@@ -181,7 +181,7 @@ def womens_page(request):
     products=Product.objects.annotate(
         primary_variant_id=Subquery(primary_variant_subquery),
         primary_variant_price=Subquery(primary_variant_price_subquery,output_field=DecimalField(max_digits=10,decimal_places=2))
-    ).filter(primary_variant_id__isnull=False)
+    ).filter(primary_variant_id__isnull=False,is_listed=True)
 
     women_category=Category.objects.filter(name__iexact='Women').first()
     if women_category:
